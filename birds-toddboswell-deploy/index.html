@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Bird ID — Todd's Field Tool</title>
+  <meta name="description" content="Point it at a bird. Find out what it is. That's it." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet"
+  />
+
+  <script type="module" crossorigin src="./assets/index-MS-Bs-As-v3.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Kcr8aSNX.css">
+
+  <style>
+    /* ============================================================
+       Wrapper additions — header nav, daily log, notes, export
+       Matches the React app's dark/amber aesthetic so it reads as
+       one cohesive tool.
+       ============================================================ */
+    :root {
+      --w-bg: #0a0a0a;
+      --w-surface: #14140f;
+      --w-surface-2: #1c1c16;
+      --w-border: #2a2a22;
+      --w-border-strong: #3a3a30;
+      --w-text: #f5f0e8;
+      --w-text-muted: #8a8580;
+      --w-text-faint: #5a5550;
+      --w-accent: #f0c350;
+      --w-mono: 'Space Mono', ui-monospace, monospace;
+      --w-display: 'Space Grotesk', sans-serif;
+      --w-serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+      --w-body: 'Inter', system-ui, sans-serif;
+    }
+
+    /* The React app builds its own visible header — hide the
+       FLATWATER ↗ link inside it. We replace it with our own nav
+       below the app. (Targeted via JS at runtime since the bundle
+       names it with Tailwind classes only.) */
+    .w-hide-flatwater { display: none !important; }
+
+    /* Sit my wrapper sections below the React app. */
+    body { background: var(--w-bg); }
+    #root { display: block; }
+
+    /* Decorative silhouettes — portfolio Bird ID card */
+    .w-deco-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 0;
+    }
+    .w-deco-inner {
+      border: 1px solid var(--w-border);
+      background: linear-gradient(180deg, var(--w-surface) 0%, var(--w-bg) 100%);
+      padding: 1.25rem 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .w-deco-inner img {
+      width: min(720px, 100%);
+      height: auto;
+      opacity: 0.42;
+      filter: invert(1) brightness(1.15);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .w-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem;
+      font-family: var(--w-body);
+      color: var(--w-text);
+    }
+
+    .w-section + .w-section { padding-top: 0; }
+
+    .w-divider {
+      max-width: 1200px;
+      margin: 0 auto;
+      border-top: 1px solid var(--w-border);
+    }
+
+    /* Site-nav strip at the very top, sits above the React header */
+    .w-topnav {
+      background: var(--w-bg);
+      border-bottom: 1px solid var(--w-border);
+      font-family: var(--w-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .w-topnav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .w-topnav a {
+      color: var(--w-text-muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .w-topnav a:hover { color: var(--w-accent); }
+    .w-topnav .right {
+      color: var(--w-text-faint);
+      font-size: 0.65rem;
+    }
+
+    /* Panel — used for log and notes */
+    .w-panel {
+      background: var(--w-surface);
+      border: 1px solid var(--w-border);
+      padding: 1.5rem;
+    }
+
+    .w-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .w-panel-title {
+      font-family: var(--w-serif);
+      font-size: 1.35rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      color: var(--w-text);
+      margin: 0;
+    }
+    .w-panel-sub {
+      font-family: var(--w-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--w-text-faint);
+    }
+
+    /* Daily log */
+    .w-log-empty {
+      font-family: var(--w-mono);
+      font-size: 0.8rem;
+      color: var(--w-text-faint);
+      padding: 1rem 0;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .w-log-list { list-style: none; padding: 0; margin: 0; }
+    .w-log-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--w-border);
+    }
+    .w-log-item:last-child { border-bottom: none; }
+    .w-log-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem 1rem;
+    }
+    .w-log-top-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.5rem 0.85rem;
+      min-width: 0;
+      flex: 1;
+    }
+    .w-log-time {
+      font-family: var(--w-mono);
+      font-size: 0.7rem;
+      color: var(--w-text-faint);
+      letter-spacing: 0.04em;
+    }
+    .w-log-name {
+      font-family: var(--w-display);
+      font-size: 0.95rem;
+      color: var(--w-text);
+    }
+    .w-log-sci {
+      font-family: var(--w-display);
+      font-style: italic;
+      font-size: 0.75rem;
+      color: var(--w-text-muted);
+      display: block;
+    }
+    .w-log-conf {
+      font-family: var(--w-mono);
+      font-size: 0.75rem;
+      color: var(--w-accent);
+      white-space: nowrap;
+    }
+    .w-log-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .w-btn-ghost {
+      font-family: var(--w-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--w-text-muted);
+      background: transparent;
+      border: 1px solid var(--w-border-strong);
+      padding: 0.35rem 0.55rem;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .w-btn-ghost:hover {
+      color: var(--w-accent);
+      border-color: var(--w-accent);
+    }
+    .w-entry-note {
+      width: 100%;
+      min-height: 2.75rem;
+      background: var(--w-bg);
+      border: 1px solid var(--w-border);
+      color: var(--w-text);
+      font-family: var(--w-mono);
+      font-size: 0.78rem;
+      line-height: 1.55;
+      padding: 0.55rem 0.65rem;
+      resize: vertical;
+      transition: border-color 0.2s ease;
+    }
+    .w-entry-note:focus {
+      outline: none;
+      border-color: var(--w-accent);
+    }
+    .w-entry-note::placeholder {
+      color: var(--w-text-faint);
+    }
+
+    /* Two-up: log on left, notes on right */
+    .w-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 900px) {
+      .w-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+    }
+
+    /* Notes textarea */
+    .w-notes-text {
+      width: 100%;
+      min-height: 220px;
+      background: var(--w-bg);
+      border: 1px solid var(--w-border);
+      color: var(--w-text);
+      font-family: var(--w-mono);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      padding: 1rem;
+      resize: vertical;
+      transition: border-color 0.2s ease;
+    }
+    .w-notes-text:focus {
+      outline: none;
+      border-color: var(--w-accent);
+    }
+    .w-notes-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      font-family: var(--w-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--w-text-faint);
+    }
+    .w-saved.is-saved { color: var(--w-accent); }
+
+    /* Export button */
+    .w-export-bar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.25rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .w-btn {
+      font-family: var(--w-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--w-bg);
+      background: var(--w-accent);
+      border: none;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .w-btn:hover { transform: translateY(-1px); }
+    .w-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .w-btn-outline {
+      color: var(--w-accent);
+      background: transparent;
+      border: 1px solid var(--w-accent);
+    }
+    .w-btn-outline:hover {
+      background: rgba(240, 195, 80, 0.08);
+    }
+    .w-import-hint {
+      width: 100%;
+      flex-basis: 100%;
+      font-family: var(--w-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--w-text-faint);
+      text-align: right;
+      margin: 0;
+    }
+
+    .w-footer-note {
+      text-align: center;
+      font-family: var(--w-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--w-text-faint);
+      padding: 1.5rem 1rem 2.5rem;
+    }
+    .w-footer-note a {
+      color: var(--w-text-muted);
+      text-decoration: none;
+      border-bottom: 1px solid var(--w-border-strong);
+    }
+    .w-footer-note a:hover { color: var(--w-accent); border-bottom-color: var(--w-accent); }
+  </style>
+</head>
+<body>
+
+  <!-- Top site-nav strip. Sits above the React app's own header. -->
+  <nav class="w-topnav">
+    <div class="w-topnav-inner">
+      <a href="https://www.toddboswell.com/">← toddboswell.com</a>
+      <span class="right">Bird ID · Field Tool</span>
+    </div>
+  </nav>
+
+  <!-- React app mounts here -->
+  <div id="root"></div>
+
+  <div class="w-deco-wrap" aria-hidden="true">
+    <div class="w-deco-inner">
+      <img src="./assets/birds.svg" alt="" width="720" height="120" decoding="async" loading="lazy" />
+    </div>
+  </div>
+
+  <!-- Wrapper additions: Daily Field Log + Notes -->
+  <section class="w-section">
+    <div class="w-grid">
+      <article class="w-panel">
+        <header class="w-panel-head">
+          <h2 class="w-panel-title">Today's Field Log</h2>
+          <span class="w-panel-sub" id="w-log-meta">stored on this device</span>
+        </header>
+        <div id="w-log-body">
+          <div class="w-log-empty">Nothing recorded yet today. Press RECORD above to begin.</div>
+        </div>
+      </article>
+
+      <article class="w-panel">
+        <header class="w-panel-head">
+          <h2 class="w-panel-title">Field Notes</h2>
+          <span class="w-panel-sub">what the model can't hear</span>
+        </header>
+        <textarea
+          id="w-notes-text"
+          class="w-notes-text"
+          placeholder="A cardinal was working the feeder at sunrise. The wind picked up around 8. Something I haven't heard before, three short whistles, came from the cedar at the back fence..."
+        ></textarea>
+        <div class="w-notes-meta">
+          <span id="w-notes-saved" class="w-saved">unsaved</span>
+          <span id="w-notes-count">0 words</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <div class="w-export-bar">
+    <input type="file" id="w-import-file" accept="application/json,.json,text/plain" hidden />
+    <button type="button" id="w-btn-download-json" class="w-btn w-btn-outline">Download archive · JSON</button>
+    <button type="button" id="w-btn-download-md" class="w-btn w-btn-outline">Download archive · Markdown</button>
+    <button type="button" id="w-btn-import-merge" class="w-btn w-btn-outline">Import · merge</button>
+    <button type="button" id="w-btn-import-replace" class="w-btn w-btn-outline">Import · replace</button>
+    <button type="button" id="w-btn-export" class="w-btn" disabled>Today's printable report ↗</button>
+    <p class="w-import-hint">Archive keeps weeks or years locally (~5MB browser limit). Export often when switching phones.</p>
+  </div>
+
+  <div class="w-divider"></div>
+
+  <p class="w-footer-note">
+    Built by <a href="https://www.toddboswell.com/">Todd Boswell</a>. BirdNET model courtesy of the Cornell Lab of Ornithology.
+    Bird sounds are analyzed in your browser by default — nothing is uploaded unless you choose a separate sync tool later.
+    Field logs and notes stay on this device until you export them.
+  </p>
+
+  <!-- ============================================================
+       Wrapper logic — runs after React app mounts.
+       Tasks:
+         1. Hide the React app's "FLATWATER ↗" link
+         2. Watch the React session log via MutationObserver, capture
+            each new bird identification into localStorage
+         3. Render our own persistent Daily Field Log
+         4. Bind notes textarea to localStorage with debounced save
+         5. Build a branded printable report on Export click
+       ============================================================ -->
+  <script>
+  (function() {
+    'use strict';
+
+    const STORAGE_KEY = 'birdid.v2';
+    const STORAGE_LEGACY = 'birdid.v1';
+    const LISTEN_GAP_MS = 45000;
+    const SCAN_CAP = 52;
+
+    const todayISO = () => new Date().toISOString().slice(0, 10);
+    const hhmm = (d) => d.toTimeString().slice(0, 5);
+
+    function genId() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+      return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+    }
+
+    function normalizeStore(parsed) {
+      if (!parsed || typeof parsed !== 'object') return { version: 2, sessions: {} };
+      const sessions = parsed.sessions && typeof parsed.sessions === 'object' ? parsed.sessions : {};
+      for (const day of Object.keys(sessions)) {
+        const sess = sessions[day];
+        if (!sess || !Array.isArray(sess.birds)) continue;
+        for (const b of sess.birds) {
+          if (!b.id) b.id = genId();
+          if (typeof b.note !== 'string') b.note = '';
+          if (typeof b.listenGen !== 'number') b.listenGen = 0;
+        }
+      }
+      return { version: 2, sessions };
+    }
+
+    function loadStore() {
+      try {
+        let raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) raw = localStorage.getItem(STORAGE_LEGACY);
+        if (!raw) return { version: 2, sessions: {} };
+        const parsed = JSON.parse(raw);
+        const store = normalizeStore(parsed);
+        saveStore(store);
+        try { localStorage.removeItem(STORAGE_LEGACY); } catch (e2) {}
+        return store;
+      } catch (e) {
+        return { version: 2, sessions: {} };
+      }
+    }
+
+    function saveStore(store) {
+      try {
+        store.version = 2;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      } catch (e) { /* quota */ }
+    }
+
+    function getToday(store) {
+      const d = todayISO();
+      if (!store.sessions[d]) {
+        store.sessions[d] = { date: d, birds: [], notes: '' };
+      }
+      return store.sessions[d];
+    }
+
+    const store = loadStore();
+
+    // ----- Hide FLATWATER (scan only #root links; cheap on phones) -----
+    function hideFlatwaterLink() {
+      const root = document.getElementById('root');
+      if (!root) return;
+      for (const el of root.querySelectorAll('a')) {
+        const t = (el.textContent || '').trim();
+        if (/flatwater/i.test(t)) el.classList.add('w-hide-flatwater');
+      }
+    }
+
+    // ----- Listen generation: gaps start a new “press record” cluster -----
+    let listenGeneration = 0;
+    let lastListenTs = 0;
+
+    function touchListenGeneration(now) {
+      if (lastListenTs === 0 || now - lastListenTs > LISTEN_GAP_MS) listenGeneration++;
+      lastListenTs = now;
+    }
+
+    function speciesKey(name, sci) {
+      return (sci || '').trim().toLowerCase() + '::' + (name || '').trim().toLowerCase();
+    }
+
+    const parsedHosts = new WeakSet();
+
+    function parsePredictionRow(el) {
+      if (!(el instanceof Element)) return null;
+      const text = el.textContent || '';
+      const percentMatch = text.match(/(\d{1,3})\s*%/);
+      if (!percentMatch) return null;
+      if (text.length > 260) return null;
+      const confidence = parseInt(percentMatch[1], 10);
+      if (!(confidence >= 0 && confidence <= 100)) return null;
+      let beforePct = text.slice(0, percentMatch.index).trim();
+      beforePct = beforePct.replace(/[—·–-]\s*$/, '').trim();
+      if (!beforePct) return null;
+      let name = beforePct;
+      let sci = '';
+      const italics = el.querySelectorAll('i, em');
+      if (italics.length) {
+        const sciText = italics[0].textContent.trim();
+        if (sciText && beforePct.endsWith(sciText)) {
+          name = beforePct.slice(0, -sciText.length).trim();
+          sci = sciText;
+        }
+      }
+      return { name, sci, confidence };
+    }
+
+    function ingestPrediction(parsed) {
+      const now = Date.now();
+      touchListenGeneration(now);
+      const today = getToday(store);
+      const birds = today.birds;
+      const sk = speciesKey(parsed.name, parsed.sci);
+
+      let idx = -1;
+      for (let i = birds.length - 1; i >= 0; i--) {
+        const b = birds[i];
+        if (b.listenGen === listenGeneration && speciesKey(b.name, b.sci) === sk) {
+          idx = i;
+          break;
+        }
+      }
+      if (idx !== -1) {
+        const prev = birds[idx];
+        if (parsed.confidence > (prev.confidence || 0)) {
+          prev.confidence = parsed.confidence;
+          prev.time = hhmm(new Date(now));
+          prev.ts = now;
+          saveStore(store);
+          renderLog();
+          updateExportEnabled();
+        }
+        return;
+      }
+
+      birds.push({
+        id: genId(),
+        name: parsed.name,
+        sci: parsed.sci,
+        confidence: parsed.confidence,
+        time: hhmm(new Date(now)),
+        ts: now,
+        listenGen: listenGeneration,
+        note: '',
+      });
+      saveStore(store);
+      renderLog();
+      updateExportEnabled();
+    }
+
+    function tryIngestPredictionElement(el) {
+      if (!(el instanceof Element)) return false;
+      if (parsedHosts.has(el)) return false;
+      const parsed = parsePredictionRow(el);
+      if (!parsed) return false;
+      parsedHosts.add(el);
+      ingestPrediction(parsed);
+      return true;
+    }
+
+    function scanAddedSubtree(rootEl) {
+      const stack = [rootEl];
+      let seen = 0;
+      while (stack.length && seen < SCAN_CAP) {
+        const el = stack.pop();
+        if (!(el instanceof Element)) continue;
+        seen++;
+        if (!tryIngestPredictionElement(el)) {
+          const kids = el.children;
+          for (let i = kids.length - 1; i >= 0; i--) stack.push(kids[i]);
+        }
+      }
+    }
+
+    const pendingMutations = [];
+    let moRaf = null;
+    function flushPredictionMutations() {
+      moRaf = null;
+      const batch = pendingMutations.splice(0);
+      for (const m of batch) {
+        for (const node of m.addedNodes) {
+          if (!(node instanceof Element)) continue;
+          tryIngestPredictionElement(node);
+          scanAddedSubtree(node);
+        }
+      }
+      hideFlatwaterLink();
+    }
+
+    let rootObserver = null;
+    function attachRootObserver() {
+      const root = document.getElementById('root');
+      if (!root || rootObserver) return;
+      rootObserver = new MutationObserver((mutations) => {
+        pendingMutations.push.apply(pendingMutations, mutations);
+        if (!moRaf) moRaf = requestAnimationFrame(flushPredictionMutations);
+      });
+      rootObserver.observe(root, { childList: true, subtree: true });
+    }
+
+    attachRootObserver();
+    let attachTries = 0;
+    const attachTimer = setInterval(() => {
+      attachRootObserver();
+      hideFlatwaterLink();
+      if (++attachTries > 100) clearInterval(attachTimer);
+    }, 400);
+
+    // ----- 3. Render the persistent Daily Field Log -----
+    const logBody = document.getElementById('w-log-body');
+    const logMeta = document.getElementById('w-log-meta');
+
+    function renderLog() {
+      const today = getToday(store);
+      const birds = today.birds || [];
+      if (!birds.length) {
+        logBody.innerHTML =
+          '<div class="w-log-empty">Nothing recorded yet today. Press RECORD above to begin.</div>';
+        logMeta.textContent = 'stored on this device';
+        return;
+      }
+      const speciesCounts = new Map();
+      for (const b of birds) {
+        const k = speciesKey(b.name, b.sci);
+        speciesCounts.set(k, (speciesCounts.get(k) || 0) + 1);
+      }
+      const speciesTotal = speciesCounts.size;
+      logMeta.textContent =
+        birds.length +
+        (birds.length === 1 ? ' ID' : ' IDs') +
+        ' · ' +
+        speciesTotal +
+        (speciesTotal === 1 ? ' species today' : ' species today');
+
+      const html = ['<ul class="w-log-list">'];
+      const sorted = [...birds].sort((a, b) => b.ts - a.ts);
+      for (const b of sorted) {
+        const bid = escapeHTML(b.id);
+        const noteVal = escapeHTML(b.note || '');
+        html.push(
+          '<li class="w-log-item" data-entry-id="' + bid + '">',
+          '<div class="w-log-top">',
+          '<div class="w-log-top-left">',
+          '<span class="w-log-time">',
+          escapeHTML(b.time),
+          '</span>',
+          '<span class="w-log-name">',
+          escapeHTML(b.name),
+          b.sci ? '<span class="w-log-sci">' + escapeHTML(b.sci) + '</span>' : '',
+          '</span>',
+          '</div>',
+          '<div class="w-log-actions">',
+          '<span class="w-log-conf">',
+          String(b.confidence),
+          '%</span>',
+          '<button type="button" class="w-btn-ghost" data-del-id="' + bid + '">Remove</button>',
+          '</div>',
+          '</div>',
+          '<textarea class="w-entry-note" rows="2" placeholder="Optional note for this identification…" data-note-id="' +
+            bid +
+            '">' +
+            noteVal +
+            '</textarea>',
+          '</li>'
+        );
+      }
+      html.push('</ul>');
+      logBody.innerHTML = html.join('');
+    }
+
+    function escapeHTML(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[c]);
+    }
+
+    renderLog();
+
+    function deleteEntry(id) {
+      const today = getToday(store);
+      today.birds = (today.birds || []).filter((b) => b.id !== id);
+      saveStore(store);
+      renderLog();
+      updateExportEnabled();
+    }
+
+    logBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-del-id]');
+      if (!btn) return;
+      deleteEntry(btn.getAttribute('data-del-id'));
+    });
+
+    const noteTimers = Object.create(null);
+    logBody.addEventListener('input', (e) => {
+      const ta = e.target.closest('[data-note-id]');
+      if (!ta) return;
+      const id = ta.getAttribute('data-note-id');
+      clearTimeout(noteTimers[id]);
+      noteTimers[id] = setTimeout(() => {
+        const today = getToday(store);
+        const row = today.birds.find((x) => x.id === id);
+        if (row) {
+          row.note = ta.value;
+          saveStore(store);
+          updateExportEnabled();
+        }
+      }, 400);
+    });
+
+    const notesEl = document.getElementById('w-notes-text');
+    const savedEl = document.getElementById('w-notes-saved');
+    const countEl = document.getElementById('w-notes-count');
+
+    notesEl.value = getToday(store).notes || '';
+    updateNotesMeta();
+
+    let saveTimer = null;
+    notesEl.addEventListener('input', () => {
+      savedEl.textContent = 'saving';
+      savedEl.classList.remove('is-saved');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        const today = getToday(store);
+        today.notes = notesEl.value;
+        saveStore(store);
+        savedEl.textContent = 'saved';
+        savedEl.classList.add('is-saved');
+        updateNotesMeta();
+        updateExportEnabled();
+      }, 500);
+    });
+
+    function updateNotesMeta() {
+      const text = notesEl.value || '';
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      countEl.textContent = words + (words === 1 ? ' word' : ' words');
+    }
+
+    function archiveHasData() {
+      for (const k of Object.keys(store.sessions)) {
+        const s = store.sessions[k];
+        if (s.birds && s.birds.length) return true;
+        if (s.notes && String(s.notes).trim()) return true;
+      }
+      return false;
+    }
+
+    const exportBtn = document.getElementById('w-btn-export');
+    const jsonBtn = document.getElementById('w-btn-download-json');
+    const mdBtn = document.getElementById('w-btn-download-md');
+    const importFile = document.getElementById('w-import-file');
+    let importMode = 'merge';
+
+    function updateExportEnabled() {
+      const today = getToday(store);
+      const todayHas =
+        (today.birds && today.birds.length) || (today.notes && today.notes.trim());
+      exportBtn.disabled = !todayHas;
+      const arch = archiveHasData();
+      jsonBtn.disabled = !arch;
+      mdBtn.disabled = !arch;
+    }
+    updateExportEnabled();
+
+    function downloadBlob(filename, text, mime) {
+      const blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportArchivePayload() {
+      return {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        app: 'Bird ID — Todd Field Tool',
+        sessions: store.sessions,
+      };
+    }
+
+    function buildMarkdownArchive() {
+      const days = Object.keys(store.sessions).sort();
+      let md = '';
+      md += '# Bird ID — field archive\n\n';
+      md += '_Saved ' + new Date().toLocaleString() + '_\n\n';
+      md +=
+        'Readable in any text editor, Notes, Notion, or Obsidian. IDs and notes only — no audio is embedded.\n\n---\n\n';
+      for (const d of days) {
+        const s = store.sessions[d];
+        const birds = s.birds || [];
+        const notes = s.notes || '';
+        if (!birds.length && !String(notes).trim()) continue;
+        md += '## ' + d + '\n\n';
+        if (birds.length) {
+          const speciesMap = new Map();
+          for (const b of birds) {
+            const key = b.name + (b.sci ? '|' + b.sci : '');
+            speciesMap.set(key, (speciesMap.get(key) || 0) + 1);
+          }
+          md +=
+            '**Summary:** ' +
+            birds.length +
+            ' identification(s), ' +
+            speciesMap.size +
+            ' species\n\n';
+          const sorted = [...birds].sort((a, b) => a.ts - b.ts);
+          for (const b of sorted) {
+            md += '- **' + b.time + '** — ' + b.name;
+            if (b.sci) md += ' _' + b.sci + '_';
+            md += ' · ' + b.confidence + '%';
+            if (b.note && b.note.trim()) md += '\n  - Note: ' + b.note.replace(/\n/g, '\n    ');
+            md += '\n';
+          }
+          md += '\n';
+        }
+        if (String(notes).trim()) md += '### Day notes\n\n' + notes + '\n\n';
+        md += '---\n\n';
+      }
+      return md;
+    }
+
+    function mergeSession(dst, src) {
+      if (!dst.birds) dst.birds = [];
+      const have = new Set(dst.birds.map((b) => b.id));
+      for (const b of src.birds || []) {
+        if (!have.has(b.id)) {
+          dst.birds.push(b);
+          have.add(b.id);
+        }
+      }
+      if (src.notes && String(src.notes).trim()) {
+        if (dst.notes && String(dst.notes).trim())
+          dst.notes = String(dst.notes).trim() + '\n\n---\n\n' + String(src.notes).trim();
+        else dst.notes = src.notes;
+      }
+    }
+
+    function applyImport(data) {
+      const incoming = normalizeStore(data);
+      if (importMode === 'replace') {
+        store.sessions = JSON.parse(JSON.stringify(incoming.sessions || {}));
+      } else {
+        for (const day of Object.keys(incoming.sessions || {})) {
+          if (!store.sessions[day]) store.sessions[day] = incoming.sessions[day];
+          else mergeSession(store.sessions[day], incoming.sessions[day]);
+        }
+      }
+      saveStore(store);
+      notesEl.value = getToday(store).notes || '';
+      renderLog();
+      updateNotesMeta();
+      updateExportEnabled();
+    }
+
+    importFile.addEventListener('change', () => {
+      const f = importFile.files && importFile.files[0];
+      importFile.value = '';
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(String(reader.result || ''));
+          if (!data || typeof data !== 'object' || !data.sessions) {
+            alert('That file does not look like a Bird ID archive. Use JSON exported from this page.');
+            return;
+          }
+          applyImport(data);
+        } catch (err) {
+          alert('Could not read that file as JSON.');
+        }
+      };
+      reader.readAsText(f);
+    });
+
+    document.getElementById('w-btn-import-merge').addEventListener('click', () => {
+      importMode = 'merge';
+      importFile.click();
+    });
+    document.getElementById('w-btn-import-replace').addEventListener('click', () => {
+      if (!confirm('Replace all field data on this device with the file? This cannot be undone.')) return;
+      importMode = 'replace';
+      importFile.click();
+    });
+
+    jsonBtn.addEventListener('click', () => {
+      const json = JSON.stringify(exportArchivePayload(), null, 2);
+      downloadBlob('bird-id-archive.json', json, 'application/json;charset=utf-8');
+    });
+
+    mdBtn.addEventListener('click', () => {
+      downloadBlob('bird-id-archive.md', buildMarkdownArchive(), 'text/markdown;charset=utf-8');
+    });
+
+    exportBtn.addEventListener('click', () => {
+      const today = getToday(store);
+      const html = buildReportHTML(today);
+      const w = window.open('', '_blank');
+      if (!w) {
+        alert('Pop-up blocker is hiding the report. Allow pop-ups for this site and try again.');
+        return;
+      }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    });
+
+    function buildReportHTML(session) {
+      const date = new Date(session.date + 'T12:00:00');
+      const dateStr = date.toLocaleDateString(undefined, {
+        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+      });
+      const birds = session.birds || [];
+      const notes = session.notes || '';
+
+      // Group identifications by species — count occurrences
+      const speciesMap = new Map();
+      for (const b of birds) {
+        const key = b.name + (b.sci ? '|' + b.sci : '');
+        if (!speciesMap.has(key)) {
+          speciesMap.set(key, { name: b.name, sci: b.sci, count: 0, bestConf: 0, firstHeard: b.time });
+        }
+        const s = speciesMap.get(key);
+        s.count++;
+        if (b.confidence > s.bestConf) s.bestConf = b.confidence;
+        if (b.time < s.firstHeard) s.firstHeard = b.time;
+      }
+      const speciesList = [...speciesMap.values()].sort((a, b) => b.count - a.count);
+
+      const speciesRows = speciesList.map(s => `
+        <tr>
+          <td class="num">${s.count}×</td>
+          <td><strong>${escapeHTML(s.name)}</strong>${s.sci ? `<br><em>${escapeHTML(s.sci)}</em>` : ''}</td>
+          <td class="num">${s.bestConf}%</td>
+          <td class="num">${escapeHTML(s.firstHeard)}</td>
+        </tr>
+      `).join('');
+
+      const timelineRows = [...birds].sort((a, b) => a.ts - b.ts).map(b => `
+        <tr>
+          <td class="num">${escapeHTML(b.time)}</td>
+          <td>${escapeHTML(b.name)}${b.sci ? ` <em>(${escapeHTML(b.sci)})</em>` : ''}</td>
+          <td class="num">${b.confidence}%</td>
+          <td>${b.note && b.note.trim() ? escapeHTML(b.note).replace(/\n/g, '<br>') : '—'}</td>
+        </tr>
+      `).join('');
+
+      const notesBlock = notes.trim()
+        ? `<section class="notes"><h2>Field Notes</h2><div class="notes-body">${
+            escapeHTML(notes).replace(/\n/g, '<br>')
+          }</div></section>`
+        : '';
+
+      return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Field Report — ${escapeHTML(dateStr)} — Bird ID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #f6f3eb; color: #1a1a1a; }
+  body {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 13pt;
+    line-height: 1.6;
+  }
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 2.5rem;
+    background: #fffdf7;
+    min-height: 100vh;
+    box-shadow: 0 0 60px rgba(0,0,0,0.08);
+  }
+  header.brand {
+    border-bottom: 2px solid #1a1a1a;
+    padding-bottom: 1.25rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .brand-mark {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 18pt;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .brand-mark .accent { color: #b8821a; }
+  .brand-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 9pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #555;
+  }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 26pt;
+    line-height: 1.15;
+    margin: 0 0 0.25rem;
+  }
+  .subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 10pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 2.5rem;
+  }
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 13pt;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 2.25rem 0 0.75rem;
+    color: #1a1a1a;
+    border-bottom: 1px solid #ccc6b8;
+    padding-bottom: 0.4rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0 1rem;
+    font-size: 12pt;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.4rem;
+    border-bottom: 1px solid #e4ddcc;
+    vertical-align: top;
+  }
+  th {
+    font-family: 'Space Mono', monospace;
+    font-size: 9pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #777;
+    font-weight: 400;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  td em { color: #6b6055; font-style: italic; }
+  .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5pt;
+    white-space: nowrap;
+  }
+  td.num { color: #555; }
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin: 0 0 2rem;
+    padding: 1.25rem 0;
+    border-top: 1px solid #ccc6b8;
+    border-bottom: 1px solid #ccc6b8;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28pt;
+    font-weight: 500;
+    line-height: 1;
+    color: #1a1a1a;
+  }
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #888;
+    margin-top: 0.4rem;
+  }
+  .notes-body {
+    font-size: 13pt;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    background: #faf6ea;
+    border-left: 3px solid #b8821a;
+    padding: 1rem 1.25rem;
+    margin: 0.25rem 0 1.5rem;
+    font-style: italic;
+  }
+  .reflection {
+    background: #f1ede0;
+    padding: 1.25rem 1.5rem;
+    margin: 2.5rem 0 1.5rem;
+    border-radius: 2px;
+    font-style: italic;
+    font-size: 13pt;
+    line-height: 1.7;
+    color: #2a2a2a;
+  }
+  .reflection p:first-child { margin-top: 0; }
+  .reflection p:last-child { margin-bottom: 0; }
+  footer.cta {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #1a1a1a;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+  footer.cta p { margin: 0.5rem 0; }
+  footer.cta .sig {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12pt;
+    color: #1a1a1a;
+  }
+  footer.cta a {
+    color: #b8821a;
+    text-decoration: none;
+    border-bottom: 1px solid #b8821a;
+  }
+  .print-bar {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 999;
+    background: #1a1a1a;
+    color: #f6f3eb;
+    padding: 0.65rem 1.25rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 9pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  }
+  .print-bar:hover { background: #b8821a; }
+  @media print {
+    body { background: #fff; }
+    .page { box-shadow: none; max-width: 100%; padding: 1.25in 1in; }
+    .print-bar { display: none; }
+    .reflection { background: #f5f1e4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .notes-body { background: #f9f6ea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+  <button class="print-bar" onclick="window.print()">Print / Save as PDF</button>
+  <div class="page">
+    <header class="brand">
+      <div class="brand-mark">Bird <span class="accent">ID</span></div>
+      <div class="brand-sub">Field Report · Todd's Field Tool</div>
+    </header>
+
+    <h1>${escapeHTML(dateStr)}</h1>
+    <div class="subtitle">${birds.length} identifications · ${speciesList.length} species</div>
+
+    <div class="summary-stats">
+      <div class="stat"><div class="stat-value">${birds.length}</div><div class="stat-label">Total Calls</div></div>
+      <div class="stat"><div class="stat-value">${speciesList.length}</div><div class="stat-label">Species</div></div>
+      <div class="stat"><div class="stat-value">${birds.length ? Math.round(birds.reduce((a, b) => a + b.confidence, 0) / birds.length) : 0}%</div><div class="stat-label">Avg. Confidence</div></div>
+    </div>
+
+    ${speciesList.length ? `
+    <section>
+      <h2>Species Identified</h2>
+      <table>
+        <thead><tr><th>Calls</th><th>Species</th><th>Best</th><th>First heard</th></tr></thead>
+        <tbody>${speciesRows}</tbody>
+      </table>
+    </section>` : ''}
+
+    ${birds.length ? `
+    <section>
+      <h2>Chronological Log</h2>
+      <table>
+        <thead><tr><th>Time</th><th>Identification</th><th>Confidence</th><th>Note</th></tr></thead>
+        <tbody>${timelineRows}</tbody>
+      </table>
+    </section>` : ''}
+
+    ${notesBlock}
+
+    <div class="reflection">
+      <p>The birds were here before us and will be here after. Listening to them, even for an hour, is one of the older ways of paying attention.</p>
+      <p>Carry today's quiet with you. Be kind to the people you meet next. Be honest about what you don't know. Notice the next thing that wants noticing.</p>
+    </div>
+
+    <footer class="cta">
+      <p class="sig">— Todd Boswell · Fatbaby Design · Omaha, Nebraska</p>
+      <p>If you have a project worth building carefully — brand, tools, training, or something stranger — I take on a small number of clients each year. <a href="https://www.toddboswell.com/">toddboswell.com</a>.</p>
+    </footer>
+  </div>
+</body>
+</html>`;
+    }
+
+  })();
+  </script>
+
+</body>
+</html>
