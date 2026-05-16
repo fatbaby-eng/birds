@@ -13,6 +13,25 @@
     rel="stylesheet"
   />
 
+  <!-- Phone mic: prefer 48 kHz capture; keep browser DSP off for bird calls. -->
+  <script>
+  (function () {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    var orig = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = function (constraints) {
+      if (constraints && constraints.audio && typeof constraints.audio === 'object') {
+        constraints = JSON.parse(JSON.stringify(constraints));
+        constraints.audio.echoCancellation = false;
+        constraints.audio.noiseSuppression = false;
+        constraints.audio.autoGainControl = false;
+        constraints.audio.channelCount = 1;
+        constraints.audio.sampleRate = { ideal: 48000 };
+        constraints.audio.latency = { ideal: 0 };
+      }
+      return orig(constraints);
+    };
+  })();
+  </script>
   <script type="module" crossorigin src="./assets/index-MS-Bs-As-v3.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-Kcr8aSNX.css">
 
@@ -334,6 +353,33 @@
       margin: 0;
     }
 
+    .w-mic-tips {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.25rem 0.75rem;
+    }
+    .w-mic-tips-inner {
+      border: 1px solid var(--w-border);
+      background: var(--w-surface);
+      padding: 0.75rem 1rem;
+      font-family: var(--w-mono);
+      font-size: 0.72rem;
+      line-height: 1.55;
+      color: var(--w-text-muted);
+    }
+    .w-mic-tips-inner strong {
+      color: var(--w-accent);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.65rem;
+    }
+    .w-mic-tips-inner ul {
+      margin: 0.4rem 0 0;
+      padding-left: 1.1rem;
+    }
+    .w-mic-tips-inner li { margin: 0.2rem 0; }
+
     .w-footer-note {
       text-align: center;
       font-family: var(--w-mono);
@@ -363,6 +409,18 @@
 
   <!-- React app mounts here -->
   <div id="root"></div>
+
+  <aside class="w-mic-tips" id="w-mic-tips">
+    <div class="w-mic-tips-inner">
+      <strong>Phone recording tips</strong>
+      <ul>
+        <li>Hold the phone still; point the <em>bottom</em> mic toward the bird (not the screen).</li>
+        <li>Record at least <strong>5–10 seconds</strong> while the bird is singing.</li>
+        <li>Step away from wind, traffic, and talking — background noise hides calls.</li>
+        <li>Watch the yellow waveform: it should move when birds are loud. If it stays flat, move closer or check mic permission.</li>
+      </ul>
+    </div>
+  </aside>
 
   <div class="w-deco-wrap" aria-hidden="true">
     <div class="w-deco-inner">
