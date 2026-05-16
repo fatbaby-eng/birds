@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
   <title>Bird ID — Todd's Field Tool</title>
   <meta name="description" content="Point it at a bird. Find out what it is. That's it." />
+  <link rel="icon" href="./assets/meadowlark-icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./assets/meadowlark-icon.svg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,6 +15,25 @@
     rel="stylesheet"
   />
 
+  <!-- Phone mic: prefer 48 kHz capture; keep browser DSP off for bird calls. -->
+  <script>
+  (function () {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    var orig = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = function (constraints) {
+      if (constraints && constraints.audio && typeof constraints.audio === 'object') {
+        constraints = JSON.parse(JSON.stringify(constraints));
+        constraints.audio.echoCancellation = false;
+        constraints.audio.noiseSuppression = false;
+        constraints.audio.autoGainControl = false;
+        constraints.audio.channelCount = 1;
+        constraints.audio.sampleRate = { ideal: 48000 };
+        constraints.audio.latency = { ideal: 0 };
+      }
+      return orig(constraints);
+    };
+  })();
+  </script>
   <script type="module" crossorigin src="./assets/index-MS-Bs-As-v3.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-Kcr8aSNX.css">
 
@@ -23,19 +44,23 @@
        one cohesive tool.
        ============================================================ */
     :root {
+      /* Align with toddboswell.com editorial dark */
       --w-bg: #0a0a0a;
-      --w-surface: #14140f;
-      --w-surface-2: #1c1c16;
-      --w-border: #2a2a22;
-      --w-border-strong: #3a3a30;
-      --w-text: #f5f0e8;
+      --w-surface: #141414;
+      --w-surface-2: #1c1c1c;
+      --w-border: rgba(232, 230, 227, 0.08);
+      --w-border-strong: rgba(232, 230, 227, 0.15);
+      --w-text: #e8e6e3;
       --w-text-muted: #8a8580;
       --w-text-faint: #5a5550;
-      --w-accent: #f0c350;
+      --w-accent: #c4a35a;
+      --w-accent-soft: rgba(196, 163, 90, 0.1);
       --w-mono: 'Space Mono', ui-monospace, monospace;
       --w-display: 'Space Grotesk', sans-serif;
-      --w-serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
-      --w-body: 'Inter', system-ui, sans-serif;
+      --w-serif: Georgia, 'Times New Roman', serif;
+      --w-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --w-gap: 0.75rem;
+      --w-radius: 4px;
     }
 
     /* The React app builds its own visible header — hide the
@@ -44,47 +69,145 @@
        names it with Tailwind classes only.) */
     .w-hide-flatwater { display: none !important; }
 
-    /* Sit my wrapper sections below the React app. */
-    body { background: var(--w-bg); }
+    body {
+      background: var(--w-bg);
+      color: var(--w-text);
+      font-family: var(--w-body);
+      -webkit-font-smoothing: antialiased;
+    }
     #root { display: block; }
+    #root .w-app-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      padding: 2px;
+    }
 
-    /* Decorative silhouettes — portfolio Bird ID card */
+    .w-label {
+      font-family: var(--w-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--w-text-faint);
+      margin: 0 0 0.35rem;
+    }
+
+    /* Help — toddboswell editorial panel */
+    .w-help {
+      border: 1px solid var(--w-border);
+      background: var(--w-surface);
+      border-radius: var(--w-radius);
+    }
+    .w-help > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-family: var(--w-serif);
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--w-text);
+      user-select: none;
+    }
+    .w-help > summary::-webkit-details-marker { display: none; }
+    .w-help > summary::after {
+      content: '+';
+      font-family: var(--w-mono);
+      font-size: 0.75rem;
+      color: var(--w-accent);
+      letter-spacing: 0.08em;
+    }
+    .w-help[open] > summary::after { content: '−'; }
+    .w-help > summary:hover { color: var(--w-accent); }
+    .w-help-body {
+      padding: 0 1rem 1rem;
+      border-top: 1px solid var(--w-border);
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--w-text-muted);
+    }
+    .w-help-body h3 {
+      font-family: var(--w-mono);
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--w-accent);
+      margin: 1rem 0 0.4rem;
+    }
+    .w-help-body h3:first-child { margin-top: 0.75rem; }
+    .w-help-body p { margin: 0 0 0.5rem; }
+    .w-help-body ul {
+      margin: 0.25rem 0 0.5rem;
+      padding-left: 1.15rem;
+    }
+    .w-help-body li { margin: 0.2rem 0; }
+    .w-help-body strong { color: var(--w-text); font-weight: 600; }
+    .w-help-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+    @media (min-width: 640px) {
+      .w-help-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .w-mic-tips {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.5rem 1.25rem 0;
+    }
+    .w-mic-tips-inner {
+      border: 1px solid var(--w-border);
+      background: var(--w-surface);
+      border-radius: var(--w-radius);
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: var(--w-text-muted);
+    }
+    .w-mic-tips-inner strong {
+      font-family: var(--w-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--w-accent);
+    }
+    .w-mic-tips ul {
+      margin: 0.4rem 0 0;
+      padding-left: 1.15rem;
+    }
+    .w-mic-tips li { margin: 0.2rem 0; }
+    .w-mic-tips strong { color: var(--w-text); font-weight: 600; }
+
+    /* Bird row — tight vertical padding (SVG has empty viewBox height) */
     .w-deco-wrap {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 1rem 1.25rem 0;
-    }
-    .w-deco-inner {
-      border: 1px solid var(--w-border);
-      background: linear-gradient(180deg, var(--w-surface) 0%, var(--w-bg) 100%);
-      padding: 1.25rem 1rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      padding: 0.1rem 1.25rem;
+      line-height: 0;
     }
     .w-deco-inner img {
-      width: min(720px, 100%);
-      height: auto;
-      opacity: 0.42;
-      filter: invert(1) brightness(1.15);
-      pointer-events: none;
-      user-select: none;
+      display: block;
+      width: 100%;
+      max-width: 640px;
+      height: 3.25rem;
+      margin: 0 auto;
+      object-fit: cover;
+      object-position: center 42%;
+      opacity: 0.32;
+      filter: invert(1) brightness(1.05);
     }
 
     .w-section {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 1.25rem;
       font-family: var(--w-body);
       color: var(--w-text);
-    }
-
-    .w-section + .w-section { padding-top: 0; }
-
-    .w-divider {
       max-width: 1200px;
       margin: 0 auto;
-      border-top: 1px solid var(--w-border);
+      padding: 0.5rem 1.25rem;
     }
 
     /* Site-nav strip at the very top, sits above the React header */
@@ -120,7 +243,8 @@
     .w-panel {
       background: var(--w-surface);
       border: 1px solid var(--w-border);
-      padding: 1.5rem;
+      border-radius: var(--w-radius);
+      padding: 1rem 1.1rem;
     }
 
     .w-panel-head {
@@ -261,7 +385,7 @@
     /* Notes textarea */
     .w-notes-text {
       width: 100%;
-      min-height: 220px;
+      min-height: 140px;
       background: var(--w-bg);
       border: 1px solid var(--w-border);
       color: var(--w-text);
@@ -289,16 +413,28 @@
     }
     .w-saved.is-saved { color: var(--w-accent); }
 
-    /* Export button */
     .w-export-bar {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 0 1.25rem 2rem;
+      padding: 0.5rem 1.25rem 0.75rem;
       display: flex;
       flex-wrap: wrap;
-      justify-content: flex-end;
+      gap: 0.45rem;
       align-items: center;
-      gap: 0.6rem;
+    }
+    .w-import-hint {
+      flex: 1 1 100%;
+      margin: 0.25rem 0 0;
+      font-family: var(--w-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      line-height: 1.5;
+      color: var(--w-text-faint);
+    }
+    .w-help-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.25rem 0.75rem;
     }
     .w-btn {
       font-family: var(--w-mono);
@@ -320,28 +456,19 @@
       border: 1px solid var(--w-accent);
     }
     .w-btn-outline:hover {
-      background: rgba(240, 195, 80, 0.08);
+      background: var(--w-accent-soft);
     }
-    .w-import-hint {
-      width: 100%;
-      flex-basis: 100%;
-      font-family: var(--w-mono);
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--w-text-faint);
-      text-align: right;
-      margin: 0;
-    }
-
     .w-footer-note {
       text-align: center;
       font-family: var(--w-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--w-text-faint);
-      padding: 1.5rem 1rem 2.5rem;
+      padding: 0.75rem 1.25rem 1.75rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      line-height: 1.6;
     }
     .w-footer-note a {
       color: var(--w-text-muted);
@@ -364,9 +491,21 @@
   <!-- React app mounts here -->
   <div id="root"></div>
 
+  <aside class="w-mic-tips" id="w-mic-tips">
+    <div class="w-mic-tips-inner">
+      <strong>Phone recording tips</strong>
+      <ul>
+        <li>Hold the phone still; point the <em>bottom</em> mic toward the bird (not the screen).</li>
+        <li>Record at least <strong>5–10 seconds</strong> while the bird is singing.</li>
+        <li>Step away from wind, traffic, and talking — background noise hides calls.</li>
+        <li>Watch the yellow waveform: it should move when birds are loud. If it stays flat, move closer or check mic permission.</li>
+      </ul>
+    </div>
+  </aside>
+
   <div class="w-deco-wrap" aria-hidden="true">
     <div class="w-deco-inner">
-      <img src="./assets/birds.svg" alt="" width="720" height="120" decoding="async" loading="lazy" />
+      <img src="./assets/birds.svg" alt="" width="720" height="52" decoding="async" loading="lazy" />
     </div>
   </div>
 
@@ -407,13 +546,24 @@
     <button type="button" id="w-btn-download-md" class="w-btn w-btn-outline">Download archive · Markdown</button>
     <button type="button" id="w-btn-import-merge" class="w-btn w-btn-outline">Import · merge</button>
     <button type="button" id="w-btn-import-replace" class="w-btn w-btn-outline">Import · replace</button>
-    <button type="button" id="w-btn-export" class="w-btn" disabled>Today's printable report ↗</button>
+    <button type="button" id="w-btn-export" class="w-btn" disabled>Today&apos;s printable report ↗</button>
     <p class="w-import-hint">Archive keeps weeks or years locally (~5MB browser limit). Export often when switching phones.</p>
   </div>
 
-  <div class="w-divider"></div>
+  <div class="w-help-wrap">
+    <details class="w-help" id="w-help">
+      <summary>Help — export, import &amp; backup</summary>
+      <div class="w-help-body">
+        <p><strong>Download archive · JSON</strong> — Full backup for another phone or safekeeping. Re-import later with merge or replace.</p>
+        <p><strong>Download archive · Markdown</strong> — Readable journal for Notes, Obsidian, or any text app.</p>
+        <p><strong>Import · merge</strong> — Adds birds and notes from a JSON file without deleting what is already here. Duplicates are skipped.</p>
+        <p><strong>Import · replace</strong> — Wipes this device&apos;s log and loads the file. Use only when restoring a backup.</p>
+        <p><strong>Today&apos;s printable report</strong> — Print-friendly page for today (species summary, timeline, notes).</p>
+      </div>
+    </details>
+  </div>
 
-  <p class="w-footer-note">
+    <p class="w-footer-note">
     Built by <a href="https://www.toddboswell.com/">Todd Boswell</a>. BirdNET model courtesy of the Cornell Lab of Ornithology.
     Bird sounds are analyzed in your browser by default — nothing is uploaded unless you choose a separate sync tool later.
     Field logs and notes stay on this device until you export them.
@@ -500,6 +650,21 @@
       for (const el of root.querySelectorAll('a')) {
         const t = (el.textContent || '').trim();
         if (/flatwater/i.test(t)) el.classList.add('w-hide-flatwater');
+      }
+    }
+
+    function patchAppLogo() {
+      const root = document.getElementById('root');
+      if (!root) return;
+      for (const box of root.querySelectorAll('div')) {
+        if (!box.classList.contains('w-8') || !box.classList.contains('h-8')) continue;
+        if (box.classList.contains('w-app-logo')) continue;
+        const span = box.querySelector('span');
+        if (!span || (span.textContent || '').trim() !== 'T') continue;
+        box.classList.add('w-app-logo');
+        box.innerHTML =
+          '<img src="./assets/meadowlark-icon.svg" alt="" width="28" height="28" decoding="async" />';
+        return;
       }
     }
 
@@ -622,6 +787,7 @@
         }
       }
       hideFlatwaterLink();
+      patchAppLogo();
     }
 
     let rootObserver = null;
@@ -640,6 +806,7 @@
     const attachTimer = setInterval(() => {
       attachRootObserver();
       hideFlatwaterLink();
+      patchAppLogo();
       if (++attachTries > 100) clearInterval(attachTimer);
     }, 400);
 
