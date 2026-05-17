@@ -183,21 +183,22 @@
     .w-mic-tips li { margin: 0.2rem 0; }
     .w-mic-tips strong { color: var(--w-text); font-weight: 600; }
 
-    /* Bird row — tight vertical padding (SVG has empty viewBox height) */
+    /* Bird row — trimmed SVG viewBox, no crop */
     .w-deco-wrap {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 0.1rem 1.25rem;
+      padding: 0.35rem 1.25rem;
+    }
+    .w-deco-inner {
       line-height: 0;
+      text-align: center;
     }
     .w-deco-inner img {
       display: block;
       width: 100%;
-      max-width: 640px;
-      height: 3.25rem;
+      max-width: 720px;
+      height: auto;
       margin: 0 auto;
-      object-fit: cover;
-      object-position: center 42%;
       opacity: 0.32;
       filter: invert(1) brightness(1.05);
     }
@@ -505,7 +506,7 @@
 
   <div class="w-deco-wrap" aria-hidden="true">
     <div class="w-deco-inner">
-      <img src="./assets/birds.svg" alt="" width="720" height="52" decoding="async" loading="lazy" />
+      <img src="./assets/birds-strip.svg" alt="" width="720" height="88" decoding="async" loading="lazy" />
     </div>
   </div>
 
