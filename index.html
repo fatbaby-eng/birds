@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <meta name="theme-color" content="#F3ECE0" />
   <title>Bird ID — Todd's Field Tool</title>
   <meta name="description" content="Point it at a bird. Find out what it is. That's it." />
   <link rel="icon" href="./assets/meadowlark-icon.svg" type="image/svg+xml" />
@@ -11,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
     rel="stylesheet"
   />
 
@@ -34,48 +35,41 @@
     };
   })();
   </script>
-  <script type="module" crossorigin src="./assets/index-MS-Bs-As-v3.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-Kcr8aSNX.css">
+  <script type="module" crossorigin src="./assets/index-wya-v1.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-wya-v1.css">
 
   <style>
     /* ============================================================
-       Wrapper additions — header nav, daily log, notes, export
-       Matches the React app's dark/amber aesthetic so it reads as
-       one cohesive tool.
+       Bird ID wrapper — sticker-flat, matched to WYA.
+       Cream ground, ink outlines, hard offset shadows. Bright on
+       purpose: read outdoors, in the sun, at arm's length.
        ============================================================ */
     :root {
-      /* Align with toddboswell.com editorial dark */
-      --w-bg: #0a0a0a;
-      --w-surface: #141414;
-      --w-surface-2: #1c1c1c;
-      --w-border: rgba(232, 230, 227, 0.08);
-      --w-border-strong: rgba(232, 230, 227, 0.15);
-      --w-text: #e8e6e3;
-      --w-text-muted: #8a8580;
-      --w-text-faint: #5a5550;
-      --w-accent: #c4a35a;
-      --w-accent-soft: rgba(196, 163, 90, 0.1);
-      --w-mono: 'Space Mono', ui-monospace, monospace;
-      --w-display: 'Space Grotesk', sans-serif;
-      --w-serif: Georgia, 'Times New Roman', serif;
-      --w-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --w-gap: 0.75rem;
-      --w-radius: 4px;
+      --ink: #171018;
+      --cream: #F3ECE0;
+      --paper: #FFFDF9;
+      --hot: #FF4D17;
+      --cobalt: #1B31E0;
+      --mint: #00C48C;
+      --grey: #8C8494;
+      --shadow: 3px 3px 0 var(--ink);
+      --shadow-lg: 5px 5px 0 var(--ink);
+      --display: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+      --mono: 'Space Mono', ui-monospace, 'Courier New', monospace;
     }
 
     /* The React app builds its own visible header — hide the
-       FLATWATER ↗ link inside it. We replace it with our own nav
-       below the app. (Targeted via JS at runtime since the bundle
-       names it with Tailwind classes only.) */
+       FLATWATER ↗ link inside it. (Targeted via JS at runtime.) */
     .w-hide-flatwater { display: none !important; }
 
     body {
-      background: var(--w-bg);
-      color: var(--w-text);
-      font-family: var(--w-body);
+      background: var(--cream);
+      color: var(--ink);
+      font-family: var(--display);
       -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
     }
-    #root { display: block; }
+    #root { display: block; font-family: var(--display); }
     #root .w-app-logo img {
       width: 100%;
       height: 100%;
@@ -84,141 +78,84 @@
       padding: 2px;
     }
 
+    /* Chunk up the React app's hairline borders so its panels read
+       as stickers too. Class names below match the remapped bundle. */
+    #root [class*="border-[#171018]"] {
+      border-width: 2.5px;
+      box-shadow: var(--shadow);
+    }
+    #root [class*="rounded"] [class*="border-[#171018]"] { box-shadow: var(--shadow); }
+
     .w-label {
-      font-family: var(--w-mono);
+      font-family: var(--mono);
       font-size: 0.62rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--w-text-faint);
+      color: var(--grey);
       margin: 0 0 0.35rem;
     }
 
-    /* Help — toddboswell editorial panel */
-    .w-help {
-      border: 1px solid var(--w-border);
-      background: var(--w-surface);
-      border-radius: var(--w-radius);
+    /* ---------- sticker chips & slabs ---------- */
+    .w-chip {
+      display: inline-block;
+      background: var(--paper);
+      border: 2.5px solid var(--ink);
+      border-radius: 10px;
+      padding: 6px 10px;
+      box-shadow: 2px 2px 0 var(--ink);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+      text-decoration: none;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
-    .w-help > summary {
-      list-style: none;
-      cursor: pointer;
-      padding: 0.85rem 1rem;
-      display: flex;
+    a.w-chip:active, button.w-chip:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+
+    .w-btn {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      font-family: var(--w-serif);
-      font-size: 1.15rem;
-      font-weight: 500;
-      color: var(--w-text);
-      user-select: none;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+      color: var(--paper);
+      background: var(--hot);
+      border: 2.5px solid var(--ink);
+      border-radius: 13px;
+      box-shadow: var(--shadow);
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
-    .w-help > summary::-webkit-details-marker { display: none; }
-    .w-help > summary::after {
-      content: '+';
-      font-family: var(--w-mono);
-      font-size: 0.75rem;
-      color: var(--w-accent);
-      letter-spacing: 0.08em;
-    }
-    .w-help[open] > summary::after { content: '−'; }
-    .w-help > summary:hover { color: var(--w-accent); }
-    .w-help-body {
-      padding: 0 1rem 1rem;
-      border-top: 1px solid var(--w-border);
-      font-size: 0.9rem;
-      line-height: 1.65;
-      color: var(--w-text-muted);
-    }
-    .w-help-body h3 {
-      font-family: var(--w-mono);
-      font-size: 0.65rem;
-      font-weight: 400;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--w-accent);
-      margin: 1rem 0 0.4rem;
-    }
-    .w-help-body h3:first-child { margin-top: 0.75rem; }
-    .w-help-body p { margin: 0 0 0.5rem; }
-    .w-help-body ul {
-      margin: 0.25rem 0 0.5rem;
-      padding-left: 1.15rem;
-    }
-    .w-help-body li { margin: 0.2rem 0; }
-    .w-help-body strong { color: var(--w-text); font-weight: 600; }
-    .w-help-grid {
-      display: grid;
-      gap: 0.75rem;
-    }
-    @media (min-width: 640px) {
-      .w-help-grid { grid-template-columns: 1fr 1fr; }
-    }
+    .w-btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+    .w-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: var(--shadow); }
+    .w-btn-outline { background: var(--paper); color: var(--ink); }
+    .w-btn:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 3px; }
 
-    .w-mic-tips {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0.5rem 1.25rem 0;
+    .w-btn-ghost {
+      font-family: var(--display);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 9px;
+      box-shadow: 2px 2px 0 var(--ink);
+      padding: 0.3rem 0.55rem;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
-    .w-mic-tips-inner {
-      border: 1px solid var(--w-border);
-      background: var(--w-surface);
-      border-radius: var(--w-radius);
-      padding: 0.75rem 1rem;
-      font-size: 0.85rem;
-      line-height: 1.55;
-      color: var(--w-text-muted);
-    }
-    .w-mic-tips-inner strong {
-      font-family: var(--w-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--w-accent);
-    }
-    .w-mic-tips ul {
-      margin: 0.4rem 0 0;
-      padding-left: 1.15rem;
-    }
-    .w-mic-tips li { margin: 0.2rem 0; }
-    .w-mic-tips strong { color: var(--w-text); font-weight: 600; }
+    .w-btn-ghost:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+    .w-btn-ghost.is-on { background: var(--cobalt); color: var(--paper); }
 
-    /* Bird row — trimmed SVG viewBox, no crop */
-    .w-deco-wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 10px 1.25rem;
-    }
-    .w-deco-inner {
-      line-height: 0;
-      text-align: center;
-    }
-    .w-deco-inner img {
-      display: block;
-      width: 100%;
-      max-width: 720px;
-      height: auto;
-      margin: 0 auto;
-      opacity: 0.32;
-      filter: invert(1) brightness(1.05);
-    }
-
-    .w-section {
-      font-family: var(--w-body);
-      color: var(--w-text);
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 1.25rem 0.5rem;
-    }
-
-    /* Site-nav strip at the very top, sits above the React header */
+    /* ---------- top nav ---------- */
     .w-topnav {
-      background: var(--w-bg);
-      border-bottom: 1px solid var(--w-border);
-      font-family: var(--w-mono);
-      font-size: 0.7rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
+      background: var(--cream);
+      border-bottom: 2.5px solid var(--ink);
     }
     .w-topnav-inner {
       max-width: 1200px;
@@ -229,66 +166,119 @@
       align-items: center;
       gap: 1rem;
     }
-    .w-topnav a {
-      color: var(--w-text-muted);
-      text-decoration: none;
-      transition: color 0.2s ease;
-    }
-    .w-topnav a:hover { color: var(--w-accent); }
     .w-topnav .right {
-      color: var(--w-text-faint);
-      font-size: 0.65rem;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--grey);
     }
 
-    /* Panel — used for log and notes */
+    /* ---------- shared panel card ---------- */
     .w-panel {
-      background: var(--w-surface);
-      border: 1px solid var(--w-border);
-      border-radius: var(--w-radius);
-      padding: 1rem 1.1rem;
+      background: var(--paper);
+      border: 3px solid var(--ink);
+      border-radius: 18px;
+      box-shadow: var(--shadow-lg);
+      padding: 1.1rem 1.15rem;
     }
-
     .w-panel-head {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: center;
       margin-bottom: 1rem;
-      gap: 1rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
     }
     .w-panel-title {
-      font-family: var(--w-serif);
-      font-size: 1.35rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      text-transform: none;
-      color: var(--w-text);
+      font-family: var(--display);
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--ink);
       margin: 0;
     }
-    .w-panel-sub {
-      font-family: var(--w-mono);
-      font-size: 0.65rem;
+    .w-tag {
+      display: inline-block;
+      padding: 5px 10px;
+      background: var(--cobalt);
+      color: var(--paper);
+      border: 2.5px solid var(--ink);
+      border-radius: 10px;
+      box-shadow: 2px 2px 0 var(--ink);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      transform: rotate(-2deg);
+    }
+    .w-tag.is-mint { background: var(--mint); color: var(--ink); transform: rotate(1.5deg); }
+
+    /* ---------- mic tips ---------- */
+    .w-mic-tips {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.75rem 1.25rem 0;
+    }
+    .w-mic-tips-inner {
+      border: 2px dashed rgba(23, 16, 24, 0.3);
+      border-radius: 14px;
+      padding: 0.8rem 1rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--ink);
+      background: transparent;
+    }
+    .w-mic-tips-inner > strong {
+      font-family: var(--mono);
+      font-size: 0.62rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--w-text-faint);
+      color: var(--hot);
+    }
+    .w-mic-tips ul { margin: 0.4rem 0 0; padding-left: 1.15rem; }
+    .w-mic-tips li { margin: 0.2rem 0; }
+    .w-mic-tips li strong { color: var(--ink); font-weight: 700; }
+
+    /* ---------- decorative bird strip ---------- */
+    .w-deco-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10px 1.25rem;
+    }
+    .w-deco-inner { line-height: 0; text-align: center; }
+    .w-deco-inner img {
+      display: block;
+      width: 100%;
+      max-width: 720px;
+      height: auto;
+      margin: 0 auto;
+      opacity: 0.85;
     }
 
-    /* Daily log */
+    .w-section {
+      color: var(--ink);
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.25rem 0.5rem;
+    }
+
+    /* ---------- daily log ---------- */
     .w-log-empty {
-      font-family: var(--w-mono);
+      font-family: var(--mono);
       font-size: 0.8rem;
-      color: var(--w-text-faint);
+      color: var(--grey);
       padding: 1rem 0;
       text-align: center;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.02em;
     }
     .w-log-list { list-style: none; padding: 0; margin: 0; }
     .w-log-item {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      padding: 0.85rem 0;
-      border-bottom: 1px solid var(--w-border);
+      gap: 0.55rem;
+      padding: 0.9rem 0;
+      border-bottom: 2px dashed rgba(23, 16, 24, 0.18);
     }
     .w-log-item:last-child { border-bottom: none; }
     .w-log-top {
@@ -301,182 +291,267 @@
     .w-log-top-left {
       display: flex;
       flex-wrap: wrap;
-      align-items: baseline;
-      gap: 0.5rem 0.85rem;
+      align-items: center;
+      gap: 0.45rem 0.7rem;
       min-width: 0;
       flex: 1;
     }
     .w-log-time {
-      font-family: var(--w-mono);
-      font-size: 0.7rem;
-      color: var(--w-text-faint);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--cream);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 3px 7px;
       letter-spacing: 0.04em;
     }
     .w-log-name {
-      font-family: var(--w-display);
-      font-size: 0.95rem;
-      color: var(--w-text);
+      font-family: var(--display);
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
     }
     .w-log-sci {
-      font-family: var(--w-display);
+      font-family: var(--mono);
       font-style: italic;
-      font-size: 0.75rem;
-      color: var(--w-text-muted);
+      font-size: 0.7rem;
+      color: var(--grey);
       display: block;
+      font-weight: 400;
     }
     .w-log-conf {
-      font-family: var(--w-mono);
-      font-size: 0.75rem;
-      color: var(--w-accent);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
       white-space: nowrap;
+      color: var(--ink);
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 3px 7px;
+      box-shadow: 2px 2px 0 var(--ink);
     }
+    .w-log-conf.is-solid { background: var(--mint); }
+    .w-log-conf.is-maybe { background: var(--cream); }
     .w-log-actions {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       flex-shrink: 0;
-    }
-    .w-btn-ghost {
-      font-family: var(--w-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--w-text-muted);
-      background: transparent;
-      border: 1px solid var(--w-border-strong);
-      padding: 0.35rem 0.55rem;
-      cursor: pointer;
-      transition: color 0.15s ease, border-color 0.15s ease;
-    }
-    .w-btn-ghost:hover {
-      color: var(--w-accent);
-      border-color: var(--w-accent);
+      flex-wrap: wrap;
     }
     .w-entry-note {
       width: 100%;
       min-height: 2.75rem;
-      background: var(--w-bg);
-      border: 1px solid var(--w-border);
-      color: var(--w-text);
-      font-family: var(--w-mono);
-      font-size: 0.78rem;
-      line-height: 1.55;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      color: var(--ink);
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: 0.85rem;
+      line-height: 1.5;
       padding: 0.55rem 0.65rem;
       resize: vertical;
-      transition: border-color 0.2s ease;
     }
-    .w-entry-note:focus {
-      outline: none;
-      border-color: var(--w-accent);
-    }
-    .w-entry-note::placeholder {
-      color: var(--w-text-faint);
+    .w-entry-note:focus { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+    .w-entry-note::placeholder { color: var(--grey); font-weight: 400; }
+
+    /* photo on an entry */
+    .w-photo-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .w-photo-thumb {
+      width: 74px;
+      height: 74px;
+      object-fit: cover;
+      border: 2.5px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      cursor: zoom-in;
+      background: var(--cream);
     }
 
-    /* Two-up: log on left, notes on right */
+    /* field guide details */
+    .w-details {
+      border: 2px dashed rgba(23, 16, 24, 0.3);
+      border-radius: 14px;
+      padding: 0.75rem 0.9rem;
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-start;
+      background: var(--cream);
+    }
+    .w-details.is-loading, .w-details.is-error {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--grey);
+    }
+    .w-details-thumb {
+      width: 86px;
+      height: 86px;
+      object-fit: cover;
+      border: 2.5px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 2px 2px 0 var(--ink);
+      flex: none;
+      background: var(--paper);
+    }
+    .w-details-body { min-width: 0; }
+    .w-details-body p {
+      margin: 0 0 0.5rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+    .w-details-links { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .w-details-links a { font-size: 10px; }
+
+    /* ---------- two-up grid ---------- */
     .w-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 1rem;
+      gap: 1.1rem;
     }
     @media (min-width: 900px) {
       .w-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
     }
 
-    /* Notes textarea */
+    /* ---------- notes ---------- */
     .w-notes-text {
       width: 100%;
       min-height: 140px;
-      background: var(--w-bg);
-      border: 1px solid var(--w-border);
-      color: var(--w-text);
-      font-family: var(--w-mono);
-      font-size: 0.85rem;
-      line-height: 1.7;
+      background: var(--paper);
+      border: 2.5px solid var(--ink);
+      border-radius: 13px;
+      color: var(--ink);
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: 0.92rem;
+      line-height: 1.6;
       padding: 1rem;
       resize: vertical;
-      transition: border-color 0.2s ease;
     }
-    .w-notes-text:focus {
-      outline: none;
-      border-color: var(--w-accent);
-    }
+    .w-notes-text:focus { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+    .w-notes-text::placeholder { color: var(--grey); font-weight: 400; }
     .w-notes-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 0.5rem;
-      font-family: var(--w-mono);
-      font-size: 0.65rem;
+      margin-top: 0.55rem;
+      font-family: var(--mono);
+      font-size: 0.62rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--w-text-faint);
+      color: var(--grey);
     }
-    .w-saved.is-saved { color: var(--w-accent); }
+    .w-saved.is-saved { color: var(--mint); font-weight: 700; }
 
+    /* ---------- export bar & help ---------- */
     .w-export-bar {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 0.5rem 1.25rem 0.75rem;
+      padding: 0.75rem 1.25rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.45rem;
+      gap: 0.6rem;
       align-items: center;
     }
     .w-import-hint {
       flex: 1 1 100%;
       margin: 0.25rem 0 0;
-      font-family: var(--w-mono);
+      font-family: var(--mono);
       font-size: 0.62rem;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
       line-height: 1.5;
-      color: var(--w-text-faint);
+      color: var(--grey);
     }
     .w-help-wrap {
       max-width: 1200px;
       margin: 0 auto;
       padding: 0 1.25rem 0.75rem;
     }
-    .w-btn {
-      font-family: var(--w-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--w-bg);
-      background: var(--w-accent);
-      border: none;
-      padding: 0.75rem 1rem;
+    .w-help {
+      border: 3px solid var(--ink);
+      background: var(--paper);
+      border-radius: 18px;
+      box-shadow: var(--shadow-lg);
+    }
+    .w-help > summary {
+      list-style: none;
       cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-family: var(--display);
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      user-select: none;
     }
-    .w-btn:hover { transform: translateY(-1px); }
-    .w-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    .w-btn-outline {
-      color: var(--w-accent);
-      background: transparent;
-      border: 1px solid var(--w-accent);
+    .w-help > summary::-webkit-details-marker { display: none; }
+    .w-help > summary::after {
+      content: '+';
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--hot);
     }
-    .w-btn-outline:hover {
-      background: var(--w-accent-soft);
+    .w-help[open] > summary::after { content: '−'; }
+    .w-help-body {
+      padding: 0 1.1rem 1rem;
+      border-top: 2px dashed rgba(23, 16, 24, 0.18);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--ink);
     }
+    .w-help-body p { margin: 0.65rem 0 0; }
+    .w-help-body strong { font-weight: 800; }
+
     .w-footer-note {
       text-align: center;
-      font-family: var(--w-mono);
+      font-family: var(--mono);
       font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--w-text-faint);
+      letter-spacing: 0.06em;
+      color: var(--grey);
       padding: 0.75rem 1.25rem 1.75rem;
-      max-width: 1200px;
+      max-width: 720px;
       margin: 0 auto;
-      line-height: 1.6;
+      line-height: 1.7;
     }
     .w-footer-note a {
-      color: var(--w-text-muted);
-      text-decoration: none;
-      border-bottom: 1px solid var(--w-border-strong);
+      color: var(--ink);
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 3px;
     }
-    .w-footer-note a:hover { color: var(--w-accent); border-bottom-color: var(--w-accent); }
+    .w-footer-note a:hover { color: var(--hot); }
+
+    /* ---------- photo lightbox ---------- */
+    .w-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 990;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(23, 16, 24, 0.55);
+      padding: 5vmin;
+      cursor: zoom-out;
+    }
+    .w-lightbox.is-on { display: flex; }
+    .w-lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      border: 3px solid var(--ink);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      background: var(--paper);
+    }
   </style>
 </head>
 <body>
@@ -484,8 +559,8 @@
   <!-- Top site-nav strip. Sits above the React app's own header. -->
   <nav class="w-topnav">
     <div class="w-topnav-inner">
-      <a href="https://www.toddboswell.com/">← toddboswell.com</a>
-      <span class="right">Bird ID · Field Tool</span>
+      <a class="w-chip" href="https://www.toddboswell.com/">← toddboswell.com</a>
+      <span class="right">Bird ID · point it at a bird</span>
     </div>
   </nav>
 
@@ -499,7 +574,7 @@
         <li>Hold the phone still; point the <em>bottom</em> mic toward the bird (not the screen).</li>
         <li>Record at least <strong>5–10 seconds</strong> while the bird is singing.</li>
         <li>Step away from wind, traffic, and talking — background noise hides calls.</li>
-        <li>Watch the yellow waveform: it should move when birds are loud. If it stays flat, move closer or check mic permission.</li>
+        <li>Watch the orange waveform: it should move when birds are loud. If it stays flat, move closer or check mic permission.</li>
       </ul>
     </div>
   </aside>
@@ -515,18 +590,18 @@
     <div class="w-grid">
       <article class="w-panel">
         <header class="w-panel-head">
-          <h2 class="w-panel-title">Today's Field Log</h2>
-          <span class="w-panel-sub" id="w-log-meta">stored on this device</span>
+          <h2 class="w-panel-title">Today's Birds</h2>
+          <span class="w-tag" id="w-log-meta">kept on this phone</span>
         </header>
         <div id="w-log-body">
-          <div class="w-log-empty">Nothing recorded yet today. Press RECORD above to begin.</div>
+          <div class="w-log-empty">Nothing logged yet. Hit RECORD up top and hold still.</div>
         </div>
       </article>
 
       <article class="w-panel">
         <header class="w-panel-head">
           <h2 class="w-panel-title">Field Notes</h2>
-          <span class="w-panel-sub">what the model can't hear</span>
+          <span class="w-tag is-mint">what the model can't hear</span>
         </header>
         <textarea
           id="w-notes-text"
@@ -543,32 +618,40 @@
 
   <div class="w-export-bar">
     <input type="file" id="w-import-file" accept="application/json,.json,text/plain" hidden />
+    <input type="file" id="w-photo-file" accept="image/*" hidden />
     <button type="button" id="w-btn-download-json" class="w-btn w-btn-outline">Download archive · JSON</button>
     <button type="button" id="w-btn-download-md" class="w-btn w-btn-outline">Download archive · Markdown</button>
     <button type="button" id="w-btn-import-merge" class="w-btn w-btn-outline">Import · merge</button>
     <button type="button" id="w-btn-import-replace" class="w-btn w-btn-outline">Import · replace</button>
-    <button type="button" id="w-btn-export" class="w-btn" disabled>Today&apos;s printable report ↗</button>
-    <p class="w-import-hint">Archive keeps weeks or years locally (~5MB browser limit). Export often when switching phones.</p>
+    <button type="button" id="w-btn-export" class="w-btn" disabled>Today's printable report ↗</button>
+    <p class="w-import-hint">The archive (birds, notes, photos) lives in this browser — roughly 5MB of room. Photos fill it fastest; export often when switching phones.</p>
   </div>
 
   <div class="w-help-wrap">
     <details class="w-help" id="w-help">
-      <summary>Help — export, import &amp; backup</summary>
+      <summary>Help — photos, field guide, export &amp; backup</summary>
       <div class="w-help-body">
+        <p><strong>Add photo</strong> — Attach a picture to any bird in the log (camera or gallery). It's shrunk to save space and stays on this device, riding along in JSON exports and the printable report.</p>
+        <p><strong>Field guide</strong> — Pulls a short summary and portrait of the species from Wikipedia. Only the species name is sent, only when you tap it, and the answer is kept locally so it works offline next time.</p>
         <p><strong>Download archive · JSON</strong> — Full backup for another phone or safekeeping. Re-import later with merge or replace.</p>
         <p><strong>Download archive · Markdown</strong> — Readable journal for Notes, Obsidian, or any text app.</p>
         <p><strong>Import · merge</strong> — Adds birds and notes from a JSON file without deleting what is already here. Duplicates are skipped.</p>
-        <p><strong>Import · replace</strong> — Wipes this device&apos;s log and loads the file. Use only when restoring a backup.</p>
-        <p><strong>Today&apos;s printable report</strong> — Print-friendly page for today (species summary, timeline, notes).</p>
+        <p><strong>Import · replace</strong> — Wipes this device's log and loads the file. Use only when restoring a backup.</p>
+        <p><strong>Today's printable report</strong> — Print-friendly page for today (species summary, timeline, photos, notes).</p>
       </div>
     </details>
   </div>
 
-    <p class="w-footer-note">
+  <p class="w-footer-note">
     Built by <a href="https://www.toddboswell.com/">Todd Boswell</a>. BirdNET model courtesy of the Cornell Lab of Ornithology.
-    Bird sounds are analyzed in your browser by default — nothing is uploaded unless you choose a separate sync tool later.
-    Field logs and notes stay on this device until you export them.
+    Bird sounds are analyzed in your browser — nothing is uploaded.
+    Field logs, notes, and photos stay on this device until you export them.
+    The optional field guide asks Wikipedia for a species summary; only the bird's name is sent, and only when you tap it.
   </p>
+
+  <div class="w-lightbox" id="w-lightbox" role="dialog" aria-label="Photo">
+    <img id="w-lightbox-img" src="" alt="Field photo" />
+  </div>
 
   <!-- ============================================================
        Wrapper logic — runs after React app mounts.
@@ -576,9 +659,12 @@
          1. Hide the React app's "FLATWATER ↗" link
          2. Watch the React session log via MutationObserver, capture
             each new bird identification into localStorage
-         3. Render our own persistent Daily Field Log
+         3. Render our own persistent Daily Field Log (notes, photos,
+            field-guide lookups per entry)
          4. Bind notes textarea to localStorage with debounced save
          5. Build a branded printable report on Export click
+       (Runs themselves also persist now — the app bundle is patched
+       to hydrate/save `birdid.runs.v1`.)
        ============================================================ -->
   <script>
   (function() {
@@ -586,8 +672,11 @@
 
     const STORAGE_KEY = 'birdid.v2';
     const STORAGE_LEGACY = 'birdid.v1';
+    const WIKI_CACHE_KEY = 'birdid.wiki.v1';
     const LISTEN_GAP_MS = 45000;
     const SCAN_CAP = 52;
+    const PHOTO_MAX_EDGE = 720;
+    const PHOTO_TARGET_CHARS = 260000; // ~190KB of image as base64
 
     const todayISO = () => new Date().toISOString().slice(0, 10);
     const hhmm = (d) => d.toTimeString().slice(0, 5);
@@ -607,6 +696,7 @@
           if (!b.id) b.id = genId();
           if (typeof b.note !== 'string') b.note = '';
           if (typeof b.listenGen !== 'number') b.listenGen = 0;
+          if (typeof b.photo !== 'string' || b.photo.indexOf('data:image/') !== 0) b.photo = '';
         }
       }
       return { version: 2, sessions };
@@ -627,11 +717,17 @@
       }
     }
 
+    let warnedQuota = false;
     function saveStore(store) {
       try {
         store.version = 2;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-      } catch (e) { /* quota */ }
+      } catch (e) {
+        if (!warnedQuota) {
+          warnedQuota = true;
+          alert('This browser\'s storage is full, so the last change could not be saved. Download the JSON archive, then remove some photos or old days to make room.');
+        }
+      }
     }
 
     function getToday(store) {
@@ -745,6 +841,7 @@
         ts: now,
         listenGen: listenGeneration,
         note: '',
+        photo: '',
       });
       saveStore(store);
       renderLog();
@@ -754,6 +851,9 @@
     function tryIngestPredictionElement(el) {
       if (!(el instanceof Element)) return false;
       if (parsedHosts.has(el)) return false;
+      // Session-log history (incl. runs rehydrated from a past visit)
+      // lives in an <aside>; only live results in <main> are new birds.
+      if (el.closest && el.closest('aside')) return false;
       const parsed = parsePredictionRow(el);
       if (!parsed) return false;
       parsedHosts.add(el);
@@ -814,14 +914,21 @@
     // ----- 3. Render the persistent Daily Field Log -----
     const logBody = document.getElementById('w-log-body');
     const logMeta = document.getElementById('w-log-meta');
+    const openDetails = new Set(); // entry ids with field guide open
+
+    function confClass(c) {
+      if (c >= 70) return ' is-solid';
+      if (c < 40) return ' is-maybe';
+      return '';
+    }
 
     function renderLog() {
       const today = getToday(store);
       const birds = today.birds || [];
       if (!birds.length) {
         logBody.innerHTML =
-          '<div class="w-log-empty">Nothing recorded yet today. Press RECORD above to begin.</div>';
-        logMeta.textContent = 'stored on this device';
+          '<div class="w-log-empty">Nothing logged yet. Hit RECORD up top and hold still.</div>';
+        logMeta.textContent = 'kept on this phone';
         return;
       }
       const speciesCounts = new Map();
@@ -835,13 +942,15 @@
         (birds.length === 1 ? ' ID' : ' IDs') +
         ' · ' +
         speciesTotal +
-        (speciesTotal === 1 ? ' species today' : ' species today');
+        (speciesTotal === 1 ? ' species' : ' species');
 
       const html = ['<ul class="w-log-list">'];
       const sorted = [...birds].sort((a, b) => b.ts - a.ts);
       for (const b of sorted) {
         const bid = escapeHTML(b.id);
         const noteVal = escapeHTML(b.note || '');
+        const hasPhoto = b.photo && b.photo.indexOf('data:image/') === 0;
+        const detailsOpen = openDetails.has(b.id);
         html.push(
           '<li class="w-log-item" data-entry-id="' + bid + '">',
           '<div class="w-log-top">',
@@ -853,14 +962,32 @@
           escapeHTML(b.name),
           b.sci ? '<span class="w-log-sci">' + escapeHTML(b.sci) + '</span>' : '',
           '</span>',
-          '</div>',
-          '<div class="w-log-actions">',
-          '<span class="w-log-conf">',
+          '<span class="w-log-conf' + confClass(b.confidence) + '">',
           String(b.confidence),
           '%</span>',
+          '</div>',
+          '<div class="w-log-actions">',
+          hasPhoto
+            ? ''
+            : '<button type="button" class="w-btn-ghost" data-photo-add="' + bid + '">+ Photo</button>',
+          '<button type="button" class="w-btn-ghost' + (detailsOpen ? ' is-on' : '') + '" data-details-toggle="' + bid + '">Field guide</button>',
           '<button type="button" class="w-btn-ghost" data-del-id="' + bid + '">Remove</button>',
           '</div>',
-          '</div>',
+          '</div>'
+        );
+        if (hasPhoto) {
+          html.push(
+            '<div class="w-photo-row">',
+            '<img class="w-photo-thumb" src="' + escapeHTML(b.photo) + '" alt="Photo of ' + escapeHTML(b.name) + '" data-photo-view="' + bid + '" />',
+            '<button type="button" class="w-btn-ghost" data-photo-add="' + bid + '">Replace</button>',
+            '<button type="button" class="w-btn-ghost" data-photo-remove="' + bid + '">Remove photo</button>',
+            '</div>'
+          );
+        }
+        if (detailsOpen) {
+          html.push('<div class="w-details is-loading" data-details-for="' + bid + '">looking it up…</div>');
+        }
+        html.push(
           '<textarea class="w-entry-note" rows="2" placeholder="Optional note for this identification…" data-note-id="' +
             bid +
             '">' +
@@ -871,6 +998,13 @@
       }
       html.push('</ul>');
       logBody.innerHTML = html.join('');
+
+      // Fill any open field-guide panels
+      for (const id of openDetails) {
+        const b = birds.find((x) => x.id === id);
+        if (b) fillDetails(b);
+        else openDetails.delete(id);
+      }
     }
 
     function escapeHTML(s) {
@@ -888,15 +1022,216 @@
     function deleteEntry(id) {
       const today = getToday(store);
       today.birds = (today.birds || []).filter((b) => b.id !== id);
+      openDetails.delete(id);
       saveStore(store);
       renderLog();
       updateExportEnabled();
     }
 
+    // ----- Photos on entries -----
+    const photoFile = document.getElementById('w-photo-file');
+    let photoTargetId = null;
+
+    function compressPhoto(file, cb) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) return cb(null);
+        const scale = Math.min(1, PHOTO_MAX_EDGE / Math.max(w, h));
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        let out = canvas.toDataURL('image/jpeg', 0.72);
+        if (out.length > PHOTO_TARGET_CHARS) out = canvas.toDataURL('image/jpeg', 0.55);
+        cb(out);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        cb(null);
+      };
+      img.src = url;
+    }
+
+    photoFile.addEventListener('change', () => {
+      const f = photoFile.files && photoFile.files[0];
+      photoFile.value = '';
+      const id = photoTargetId;
+      photoTargetId = null;
+      if (!f || !id) return;
+      compressPhoto(f, (dataUrl) => {
+        if (!dataUrl) {
+          alert('Could not read that image.');
+          return;
+        }
+        const today = getToday(store);
+        const row = today.birds.find((x) => x.id === id);
+        if (!row) return;
+        row.photo = dataUrl;
+        saveStore(store);
+        renderLog();
+      });
+    });
+
+    const lightbox = document.getElementById('w-lightbox');
+    const lightboxImg = document.getElementById('w-lightbox-img');
+    lightbox.addEventListener('click', () => {
+      lightbox.classList.remove('is-on');
+      lightboxImg.src = '';
+    });
+
+    // ----- Field guide: Wikipedia summary, cached locally -----
+    function loadWikiCache() {
+      try {
+        const raw = localStorage.getItem(WIKI_CACHE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (e) { return {}; }
+    }
+    function saveWikiCache(cache) {
+      try {
+        const keys = Object.keys(cache);
+        if (keys.length > 120) {
+          keys.sort((a, b) => (cache[a].at || 0) - (cache[b].at || 0));
+          for (const k of keys.slice(0, keys.length - 120)) delete cache[k];
+        }
+        localStorage.setItem(WIKI_CACHE_KEY, JSON.stringify(cache));
+      } catch (e) { /* cache is disposable */ }
+    }
+    const wikiCache = loadWikiCache();
+
+    function wikiFetchSummary(title) {
+      return fetch(
+        'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title) + '?redirect=true',
+        { headers: { Accept: 'application/json' } }
+      ).then((r) => {
+        if (!r.ok) throw new Error('http ' + r.status);
+        return r.json();
+      });
+    }
+
+    function getBirdFacts(b, cb) {
+      const key = speciesKey(b.name, b.sci);
+      if (wikiCache[key]) return cb(wikiCache[key]);
+      const tryTitles = [];
+      if (b.sci) tryTitles.push(b.sci);
+      if (b.name) tryTitles.push(b.name);
+      let i = 0;
+      function attempt() {
+        if (i >= tryTitles.length) return cb(null);
+        wikiFetchSummary(tryTitles[i++])
+          .then((data) => {
+            if (!data || !data.extract) return attempt();
+            const facts = {
+              at: Date.now(),
+              title: data.title || b.name,
+              extract: String(data.extract).slice(0, 900),
+              thumb: data.thumbnail && data.thumbnail.source ? data.thumbnail.source : '',
+              url:
+                (data.content_urls && data.content_urls.desktop && data.content_urls.desktop.page) || '',
+            };
+            wikiCache[key] = facts;
+            saveWikiCache(wikiCache);
+            cb(facts);
+          })
+          .catch(attempt);
+      }
+      attempt();
+    }
+
+    function detailsLinks(b) {
+      const links = [];
+      const aab =
+        'https://www.allaboutbirds.org/guide/' +
+        encodeURIComponent((b.name || '').trim().replace(/[’']/g, '').replace(/\s+/g, '_'));
+      links.push('<a class="w-chip" href="' + aab + '" target="_blank" rel="noopener">All About Birds ↗</a>');
+      if (b.sci) {
+        links.push(
+          '<a class="w-chip" href="https://www.inaturalist.org/taxa/search?q=' +
+            encodeURIComponent(b.sci) +
+            '" target="_blank" rel="noopener">More photos ↗</a>'
+        );
+      }
+      return links;
+    }
+
+    function fillDetails(b) {
+      const box = logBody.querySelector('[data-details-for="' + CSS.escape(b.id) + '"]');
+      if (!box) return;
+      getBirdFacts(b, (facts) => {
+        const box2 = logBody.querySelector('[data-details-for="' + CSS.escape(b.id) + '"]');
+        if (!box2) return;
+        const links = detailsLinks(b);
+        if (facts && facts.url) {
+          links.unshift('<a class="w-chip" href="' + escapeHTML(facts.url) + '" target="_blank" rel="noopener">Wikipedia ↗</a>');
+        }
+        if (!facts) {
+          box2.className = 'w-details is-error';
+          box2.innerHTML =
+            'No luck reaching the field guide (offline?). Try these instead: <span class="w-details-links">' +
+            links.join(' ') +
+            '</span>';
+          return;
+        }
+        box2.className = 'w-details';
+        box2.innerHTML =
+          (facts.thumb
+            ? '<img class="w-details-thumb" src="' + escapeHTML(facts.thumb) + '" alt="' + escapeHTML(facts.title) + '" loading="lazy" />'
+            : '') +
+          '<div class="w-details-body"><p>' +
+          escapeHTML(facts.extract) +
+          '</p><div class="w-details-links">' +
+          links.join('') +
+          '</div></div>';
+      });
+    }
+
     logBody.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-del-id]');
-      if (!btn) return;
-      deleteEntry(btn.getAttribute('data-del-id'));
+      const del = e.target.closest('[data-del-id]');
+      if (del) return deleteEntry(del.getAttribute('data-del-id'));
+
+      const add = e.target.closest('[data-photo-add]');
+      if (add) {
+        photoTargetId = add.getAttribute('data-photo-add');
+        photoFile.click();
+        return;
+      }
+
+      const rm = e.target.closest('[data-photo-remove]');
+      if (rm) {
+        const today = getToday(store);
+        const row = today.birds.find((x) => x.id === rm.getAttribute('data-photo-remove'));
+        if (row) {
+          row.photo = '';
+          saveStore(store);
+          renderLog();
+        }
+        return;
+      }
+
+      const view = e.target.closest('[data-photo-view]');
+      if (view) {
+        const today = getToday(store);
+        const row = today.birds.find((x) => x.id === view.getAttribute('data-photo-view'));
+        if (row && row.photo) {
+          lightboxImg.src = row.photo;
+          lightbox.classList.add('is-on');
+        }
+        return;
+      }
+
+      const dt = e.target.closest('[data-details-toggle]');
+      if (dt) {
+        const id = dt.getAttribute('data-details-toggle');
+        if (openDetails.has(id)) openDetails.delete(id);
+        else openDetails.add(id);
+        renderLog();
+      }
     });
 
     const noteTimers = Object.create(null);
@@ -999,7 +1334,7 @@
       md += '# Bird ID — field archive\n\n';
       md += '_Saved ' + new Date().toLocaleString() + '_\n\n';
       md +=
-        'Readable in any text editor, Notes, Notion, or Obsidian. IDs and notes only — no audio is embedded.\n\n---\n\n';
+        'Readable in any text editor, Notes, Notion, or Obsidian. IDs and notes only — audio and photos are not embedded (photos travel in the JSON archive).\n\n---\n\n';
       for (const d of days) {
         const s = store.sessions[d];
         const birds = s.birds || [];
@@ -1023,6 +1358,7 @@
             md += '- **' + b.time + '** — ' + b.name;
             if (b.sci) md += ' _' + b.sci + '_';
             md += ' · ' + b.confidence + '%';
+            if (b.photo) md += ' · 📷';
             if (b.note && b.note.trim()) md += '\n  - Note: ' + b.note.replace(/\n/g, '\n    ');
             md += '\n';
           }
@@ -1153,7 +1489,11 @@
       const timelineRows = [...birds].sort((a, b) => a.ts - b.ts).map(b => `
         <tr>
           <td class="num">${escapeHTML(b.time)}</td>
-          <td>${escapeHTML(b.name)}${b.sci ? ` <em>(${escapeHTML(b.sci)})</em>` : ''}</td>
+          <td>${escapeHTML(b.name)}${b.sci ? ` <em>(${escapeHTML(b.sci)})</em>` : ''}${
+            b.photo && b.photo.indexOf('data:image/') === 0
+              ? `<br><img class="snap" src="${escapeHTML(b.photo)}" alt="Photo of ${escapeHTML(b.name)}">`
+              : ''
+          }</td>
           <td class="num">${b.confidence}%</td>
           <td>${b.note && b.note.trim() ? escapeHTML(b.note).replace(/\n/g, '<br>') : '—'}</td>
         </tr>
@@ -1172,27 +1512,28 @@
 <title>Field Report — ${escapeHTML(dateStr)} — Bird ID</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #f6f3eb; color: #1a1a1a; }
+  html, body { margin: 0; padding: 0; background: #F3ECE0; color: #171018; }
   body {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 13pt;
-    line-height: 1.6;
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: 12pt;
+    line-height: 1.55;
   }
   .page {
     max-width: 720px;
-    margin: 0 auto;
-    padding: 3rem 2.5rem;
-    background: #fffdf7;
-    min-height: 100vh;
-    box-shadow: 0 0 60px rgba(0,0,0,0.08);
+    margin: 1.5rem auto;
+    padding: 2.5rem 2.25rem;
+    background: #FFFDF9;
+    border: 3px solid #171018;
+    border-radius: 18px;
+    box-shadow: 6px 6px 0 #171018;
   }
   header.brand {
-    border-bottom: 2px solid #1a1a1a;
-    padding-bottom: 1.25rem;
-    margin-bottom: 2rem;
+    border-bottom: 3px solid #171018;
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.75rem;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -1200,165 +1541,164 @@
     flex-wrap: wrap;
   }
   .brand-mark {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-size: 18pt;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-weight: 800;
+    font-size: 20pt;
+    letter-spacing: -0.03em;
   }
-  .brand-mark .accent { color: #b8821a; }
+  .brand-mark .accent { color: #FF4D17; }
   .brand-sub {
     font-family: 'Space Mono', monospace;
-    font-size: 9pt;
+    font-size: 8.5pt;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #555;
+    color: #8C8494;
   }
   h1 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 500;
-    font-size: 26pt;
-    line-height: 1.15;
+    font-weight: 800;
+    font-size: 24pt;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
     margin: 0 0 0.25rem;
   }
   .subtitle {
     font-family: 'Space Mono', monospace;
-    font-size: 10pt;
+    font-size: 9pt;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #777;
-    margin-bottom: 2.5rem;
+    color: #8C8494;
+    margin-bottom: 2rem;
   }
   h2 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 600;
-    font-size: 13pt;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin: 2.25rem 0 0.75rem;
-    color: #1a1a1a;
-    border-bottom: 1px solid #ccc6b8;
-    padding-bottom: 0.4rem;
+    font-weight: 800;
+    font-size: 12pt;
+    letter-spacing: -0.01em;
+    margin: 2rem 0 0.6rem;
+    color: #171018;
+    border-bottom: 2px dashed rgba(23,16,24,0.25);
+    padding-bottom: 0.35rem;
   }
   table {
     width: 100%;
     border-collapse: collapse;
     margin: 0.5rem 0 1rem;
-    font-size: 12pt;
+    font-size: 11pt;
   }
   th, td {
     text-align: left;
     padding: 0.5rem 0.4rem;
-    border-bottom: 1px solid #e4ddcc;
+    border-bottom: 1px solid rgba(23,16,24,0.15);
     vertical-align: top;
   }
   th {
     font-family: 'Space Mono', monospace;
-    font-size: 9pt;
+    font-size: 8pt;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #777;
+    color: #8C8494;
     font-weight: 400;
-    border-bottom: 1px solid #1a1a1a;
+    border-bottom: 2px solid #171018;
   }
-  td em { color: #6b6055; font-style: italic; }
+  td em { color: #8C8494; font-style: italic; }
   .num {
     font-family: 'Space Mono', monospace;
-    font-size: 10.5pt;
+    font-size: 9.5pt;
     white-space: nowrap;
   }
-  td.num { color: #555; }
+  td.num { color: #171018; }
+  img.snap {
+    margin-top: 6px;
+    max-width: 180px;
+    max-height: 130px;
+    border: 2.5px solid #171018;
+    border-radius: 10px;
+  }
   .summary-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin: 0 0 2rem;
-    padding: 1.25rem 0;
-    border-top: 1px solid #ccc6b8;
-    border-bottom: 1px solid #ccc6b8;
+    gap: 1rem;
+    margin: 0 0 1.75rem;
   }
   .stat {
     text-align: center;
+    background: #F3ECE0;
+    border: 2.5px solid #171018;
+    border-radius: 14px;
+    box-shadow: 3px 3px 0 #171018;
+    padding: 0.9rem 0.5rem;
   }
   .stat-value {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 28pt;
-    font-weight: 500;
+    font-size: 24pt;
+    font-weight: 800;
     line-height: 1;
-    color: #1a1a1a;
+    color: #171018;
   }
   .stat-label {
     font-family: 'Space Mono', monospace;
-    font-size: 8.5pt;
+    font-size: 7.5pt;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #888;
+    color: #8C8494;
     margin-top: 0.4rem;
   }
   .notes-body {
-    font-size: 13pt;
-    line-height: 1.75;
+    font-size: 11.5pt;
+    line-height: 1.65;
     white-space: pre-wrap;
-    background: #faf6ea;
-    border-left: 3px solid #b8821a;
-    padding: 1rem 1.25rem;
+    background: #F3ECE0;
+    border: 2.5px solid #171018;
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
     margin: 0.25rem 0 1.5rem;
-    font-style: italic;
   }
   .reflection {
-    background: #f1ede0;
-    padding: 1.25rem 1.5rem;
-    margin: 2.5rem 0 1.5rem;
-    border-radius: 2px;
-    font-style: italic;
-    font-size: 13pt;
-    line-height: 1.7;
-    color: #2a2a2a;
+    background: #F3ECE0;
+    border: 2px dashed rgba(23,16,24,0.3);
+    padding: 1.1rem 1.3rem;
+    margin: 2.25rem 0 1.25rem;
+    border-radius: 14px;
+    font-size: 11.5pt;
+    line-height: 1.65;
+    color: #171018;
   }
   .reflection p:first-child { margin-top: 0; }
   .reflection p:last-child { margin-bottom: 0; }
   footer.cta {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 2px solid #1a1a1a;
-    font-size: 11pt;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 3px solid #171018;
+    font-size: 10pt;
     line-height: 1.6;
   }
-  footer.cta p { margin: 0.5rem 0; }
-  footer.cta .sig {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 600;
-    font-size: 12pt;
-    color: #1a1a1a;
-  }
+  footer.cta p { margin: 0.4rem 0; }
+  footer.cta .sig { font-weight: 800; font-size: 11pt; color: #171018; }
   footer.cta a {
-    color: #b8821a;
-    text-decoration: none;
-    border-bottom: 1px solid #b8821a;
+    color: #FF4D17;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .print-bar {
     position: fixed;
     top: 1rem;
     right: 1rem;
     z-index: 999;
-    background: #1a1a1a;
-    color: #f6f3eb;
-    padding: 0.65rem 1.25rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 9pt;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    border: none;
+    background: #FF4D17;
+    color: #FFFDF9;
+    padding: 0.7rem 1.2rem;
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: 10pt;
+    border: 2.5px solid #171018;
+    border-radius: 13px;
+    box-shadow: 3px 3px 0 #171018;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   }
-  .print-bar:hover { background: #b8821a; }
+  .print-bar:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #171018; }
   @media print {
     body { background: #fff; }
-    .page { box-shadow: none; max-width: 100%; padding: 1.25in 1in; }
+    .page { box-shadow: none; border: none; border-radius: 0; max-width: 100%; margin: 0; padding: 1in 0.9in; }
     .print-bar { display: none; }
-    .reflection { background: #f5f1e4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .notes-body { background: #f9f6ea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .stat, .reflection, .notes-body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
 </head>
@@ -1405,8 +1745,8 @@
     </div>
 
     <footer class="cta">
-      <p class="sig">— Todd Boswell · Fatbaby Design · Omaha, Nebraska</p>
-      <p>If you have a project worth building carefully — brand, tools, training, or something stranger — I take on a small number of clients each year. <a href="https://www.toddboswell.com/">toddboswell.com</a>.</p>
+      <p class="sig">— Todd Boswell · Omaha, Nebraska</p>
+      <p>More field tools and quieter corners at <a href="https://www.toddboswell.com/">toddboswell.com</a>.</p>
     </footer>
   </div>
 </body>
