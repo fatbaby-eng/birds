@@ -531,6 +531,131 @@
     }
     .w-footer-note a:hover { color: var(--hot); }
 
+    /* ---------- species portraits ---------- */
+    .w-portrait {
+      width: 46px;
+      height: 46px;
+      object-fit: cover;
+      border: 2.5px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 2px 2px 0 var(--ink);
+      flex: none;
+      background: var(--cream);
+      cursor: pointer;
+    }
+    #root .w-inject-portrait {
+      width: 30px;
+      height: 30px;
+      object-fit: cover;
+      border: 2px solid var(--ink);
+      border-radius: 9px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+      background: var(--cream);
+    }
+
+    /* ---------- bird songs panel ---------- */
+    .w-song-search {
+      width: 100%;
+      height: 52px;
+      padding: 0 15px;
+      background: var(--paper);
+      border: 2.5px solid var(--ink);
+      border-radius: 13px;
+      color: var(--ink);
+      font-family: var(--display);
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .w-song-search:focus { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+    .w-song-search::placeholder { color: var(--grey); font-weight: 500; }
+    .w-song-picks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.7rem;
+    }
+    .w-song-picks:empty { display: none; }
+    .w-pick {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px 6px 6px;
+      background: var(--paper);
+      border: 2.5px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 2px 2px 0 var(--ink);
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .w-pick:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+    .w-pick.is-active { background: var(--cobalt); color: var(--paper); }
+    .w-pick img {
+      width: 34px;
+      height: 34px;
+      object-fit: cover;
+      border: 2px solid var(--ink);
+      border-radius: 9px;
+      background: var(--cream);
+    }
+    .w-pick .sci { display: block; font-family: var(--mono); font-style: italic; font-size: 10px; font-weight: 400; opacity: 0.75; }
+    .w-song-list { list-style: none; padding: 0; margin: 0.9rem 0 0; }
+    .w-song-list:empty { display: none; }
+    .w-song-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.55rem 0;
+      border-bottom: 2px dashed rgba(23, 16, 24, 0.15);
+    }
+    .w-song-row:last-child { border-bottom: none; }
+    .w-play {
+      flex: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--hot);
+      color: var(--paper);
+      border: 2.5px solid var(--ink);
+      box-shadow: var(--shadow);
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .w-play:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+    .w-play.is-playing { background: var(--mint); color: var(--ink); }
+    .w-song-meta { min-width: 0; flex: 1; }
+    .w-song-who {
+      font-family: var(--display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .w-song-lic {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--grey);
+    }
+    .w-song-lic a { color: var(--grey); }
+    .w-song-status {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--grey);
+      margin-top: 0.8rem;
+    }
+    .w-song-status:empty { display: none; }
+
     /* ---------- photo lightbox ---------- */
     .w-lightbox {
       position: fixed;
@@ -616,6 +741,26 @@
     </div>
   </section>
 
+  <!-- Bird songs: look one up, hear what it sounds like -->
+  <section class="w-section" style="margin-top:1.1rem">
+    <article class="w-panel">
+      <header class="w-panel-head">
+        <h2 class="w-panel-title">Bird Songs</h2>
+        <span class="w-tag">hear what they sound like</span>
+      </header>
+      <input
+        type="search"
+        id="w-song-search"
+        class="w-song-search"
+        placeholder="Look up a bird — cardinal, blue jay, meadowlark…"
+        autocomplete="off"
+      />
+      <div class="w-song-picks" id="w-song-picks"></div>
+      <ul class="w-song-list" id="w-song-list"></ul>
+      <div class="w-song-status" id="w-song-status">Type a name, pick a bird, press play. Recordings come from birders on iNaturalist, credited under each one.</div>
+    </article>
+  </section>
+
   <div class="w-export-bar">
     <input type="file" id="w-import-file" accept="application/json,.json,text/plain" hidden />
     <input type="file" id="w-photo-file" accept="image/*" hidden />
@@ -632,7 +777,9 @@
       <summary>Help — photos, field guide, export &amp; backup</summary>
       <div class="w-help-body">
         <p><strong>Add photo</strong> — Attach a picture to any bird in the log (camera or gallery). It's shrunk to save space and stays on this device, riding along in JSON exports and the printable report.</p>
-        <p><strong>Field guide</strong> — Pulls a short summary and portrait of the species from Wikipedia. Only the species name is sent, only when you tap it, and the answer is kept locally so it works offline next time.</p>
+        <p><strong>Portraits</strong> — When a bird is identified, the page asks iNaturalist for a small picture of the species so you can see who you're hearing. Only the species name is sent; pictures are remembered locally.</p>
+        <p><strong>Field guide</strong> — Pulls a short summary and portrait of the species from Wikipedia, plus a Song button. Only the species name is sent, and the answer is kept locally so it works offline next time.</p>
+        <p><strong>Bird Songs</strong> — Search any bird and play real recordings made by birders on iNaturalist (openly licensed, credited under each recording). Handy for learning a call before you go out.</p>
         <p><strong>Download archive · JSON</strong> — Full backup for another phone or safekeeping. Re-import later with merge or replace.</p>
         <p><strong>Download archive · Markdown</strong> — Readable journal for Notes, Obsidian, or any text app.</p>
         <p><strong>Import · merge</strong> — Adds birds and notes from a JSON file without deleting what is already here. Duplicates are skipped.</p>
@@ -644,9 +791,9 @@
 
   <p class="w-footer-note">
     Built by <a href="https://www.toddboswell.com/">Todd Boswell</a>. BirdNET model courtesy of the Cornell Lab of Ornithology.
-    Bird sounds are analyzed in your browser — nothing is uploaded.
-    Field logs, notes, and photos stay on this device until you export them.
-    The optional field guide asks Wikipedia for a species summary; only the bird's name is sent, and only when you tap it.
+    Your recordings are analyzed in your browser — the audio never leaves this device.
+    Field logs, notes, and photos stay here too, until you export them.
+    Species portraits and the song player ask iNaturalist, and the field guide asks Wikipedia — only the bird's name is ever sent.
   </p>
 
   <div class="w-lightbox" id="w-lightbox" role="dialog" aria-label="Photo">
@@ -858,6 +1005,7 @@
       if (!parsed) return false;
       parsedHosts.add(el);
       ingestPrediction(parsed);
+      injectRowPortrait(el, parsed);
       return true;
     }
 
@@ -951,10 +1099,15 @@
         const noteVal = escapeHTML(b.note || '');
         const hasPhoto = b.photo && b.photo.indexOf('data:image/') === 0;
         const detailsOpen = openDetails.has(b.id);
+        const taxon = taxaCache[speciesKey(b.name, b.sci)];
+        if (!taxon) queuePortrait(b);
         html.push(
           '<li class="w-log-item" data-entry-id="' + bid + '">',
           '<div class="w-log-top">',
           '<div class="w-log-top-left">',
+          taxon && taxon.photo
+            ? '<img class="w-portrait" src="' + escapeHTML(taxon.photo) + '" alt="' + escapeHTML(b.name) + '" loading="lazy" data-details-toggle="' + bid + '" title="Field guide" />'
+            : '',
           '<span class="w-log-time">',
           escapeHTML(b.time),
           '</span>',
@@ -1016,8 +1169,6 @@
         "'": '&#39;',
       })[c]);
     }
-
-    renderLog();
 
     function deleteEntry(id) {
       const today = getToday(store);
@@ -1144,6 +1295,256 @@
       attempt();
     }
 
+    // ----- iNaturalist: species portraits + songs -----
+    const TAXA_CACHE_KEY = 'birdid.taxa.v1';
+
+    function loadTaxaCache() {
+      try {
+        const raw = localStorage.getItem(TAXA_CACHE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (e) { return {}; }
+    }
+    function saveTaxaCache(cache) {
+      try {
+        const keys = Object.keys(cache);
+        if (keys.length > 150) {
+          keys.sort((a, b) => (cache[a].at || 0) - (cache[b].at || 0));
+          for (const k of keys.slice(0, keys.length - 150)) delete cache[k];
+        }
+        localStorage.setItem(TAXA_CACHE_KEY, JSON.stringify(cache));
+      } catch (e) { /* cache is disposable */ }
+    }
+    const taxaCache = loadTaxaCache();
+    const taxaInFlight = new Map(); // key -> [callbacks waiting]
+
+    function inatTaxaSearch(q, perPage) {
+      return fetch(
+        'https://api.inaturalist.org/v1/taxa?q=' + encodeURIComponent(q) +
+          '&iconic_taxa=Aves&per_page=' + (perPage || 1),
+        { headers: { Accept: 'application/json' } }
+      ).then((r) => {
+        if (!r.ok) throw new Error('http ' + r.status);
+        return r.json();
+      });
+    }
+
+    function taxonFromResult(t) {
+      return {
+        at: Date.now(),
+        id: t.id,
+        sci: t.name || '',
+        common: t.preferred_common_name || t.name || '',
+        photo: t.default_photo ? (t.default_photo.square_url || '') : '',
+      };
+    }
+
+    // Look up (and remember) the iNat taxon for a logged bird.
+    function getTaxon(b, cb) {
+      const key = speciesKey(b.name, b.sci);
+      if (taxaCache[key]) return cb(taxaCache[key]);
+      if (taxaInFlight.has(key)) {
+        taxaInFlight.get(key).push(cb);
+        return;
+      }
+      taxaInFlight.set(key, [cb]);
+      const settle = (taxon) => {
+        const waiters = taxaInFlight.get(key) || [];
+        taxaInFlight.delete(key);
+        for (const w of waiters) {
+          try { w(taxon); } catch (e) {}
+        }
+      };
+      inatTaxaSearch(b.sci || b.name, 1)
+        .then((data) => {
+          const t = data && data.results && data.results[0];
+          if (!t) return settle(null);
+          const taxon = taxonFromResult(t);
+          taxaCache[key] = taxon;
+          saveTaxaCache(taxaCache);
+          settle(taxon);
+        })
+        .catch(() => settle(null));
+    }
+
+    // Auto-portrait: queue a lookup for a log entry and repaint when it lands.
+    let portraitRepaint = null;
+    function queuePortrait(b) {
+      const key = speciesKey(b.name, b.sci);
+      if (taxaCache[key]) return;
+      getTaxon(b, (taxon) => {
+        if (!taxon || !taxon.photo) return;
+        clearTimeout(portraitRepaint);
+        portraitRepaint = setTimeout(renderLog, 150);
+      });
+    }
+
+    // Put a small portrait on the app's live result rows too.
+    function injectRowPortrait(el, parsed) {
+      getTaxon({ name: parsed.name, sci: parsed.sci }, (taxon) => {
+        if (!taxon || !taxon.photo) return;
+        if (!el.isConnected || el.querySelector('.w-inject-portrait')) return;
+        const img = document.createElement('img');
+        img.className = 'w-inject-portrait';
+        img.src = taxon.photo;
+        img.alt = '';
+        el.insertBefore(img, el.firstChild);
+      });
+    }
+
+    // ----- Songs: openly licensed recordings from iNaturalist -----
+    const songsByTaxon = Object.create(null); // in-memory, session only
+
+    function getSongs(taxonId, cb) {
+      if (songsByTaxon[taxonId]) return cb(songsByTaxon[taxonId]);
+      fetch(
+        'https://api.inaturalist.org/v1/observations?taxon_id=' + taxonId +
+          '&sounds=true&quality_grade=research&per_page=8&order_by=votes' +
+          '&sound_license=cc0,cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa',
+        { headers: { Accept: 'application/json' } }
+      )
+        .then((r) => {
+          if (!r.ok) throw new Error('http ' + r.status);
+          return r.json();
+        })
+        .then((data) => {
+          const songs = [];
+          for (const o of (data && data.results) || []) {
+            const s = (o.sounds || []).find((x) => x && x.file_url);
+            if (!s) continue;
+            songs.push({
+              url: s.file_url,
+              user: (o.user && (o.user.name || o.user.login)) || 'unknown',
+              license: (s.license_code || 'cc').toUpperCase().replace(/-/g, ' '),
+              obs: 'https://www.inaturalist.org/observations/' + o.id,
+            });
+            if (songs.length >= 5) break;
+          }
+          songsByTaxon[taxonId] = songs;
+          cb(songs);
+        })
+        .catch(() => cb(null));
+    }
+
+    // One shared player; clicking the playing button stops it.
+    const player = new Audio();
+    let playingUrl = '';
+    function refreshPlayButtons() {
+      for (const btn of document.querySelectorAll('[data-song-url]')) {
+        const on = playingUrl && btn.getAttribute('data-song-url') === playingUrl;
+        btn.classList.toggle('is-playing', !!on);
+        if (btn.classList.contains('w-chip')) btn.textContent = on ? '◼ Stop' : '▶ Song';
+        else btn.textContent = on ? '◼' : '▶';
+      }
+    }
+    function toggleSong(url) {
+      if (playingUrl === url) {
+        player.pause();
+        playingUrl = '';
+      } else {
+        playingUrl = url;
+        player.src = url;
+        player.play().catch(() => { playingUrl = ''; refreshPlayButtons(); });
+      }
+      refreshPlayButtons();
+    }
+    player.addEventListener('ended', () => { playingUrl = ''; refreshPlayButtons(); });
+    player.addEventListener('error', () => { playingUrl = ''; refreshPlayButtons(); });
+
+    function songRowsHTML(songs) {
+      return songs
+        .map(
+          (s) =>
+            '<li class="w-song-row">' +
+            '<button type="button" class="w-play" data-song-url="' + escapeHTML(s.url) + '" aria-label="Play recording">▶</button>' +
+            '<div class="w-song-meta">' +
+            '<div class="w-song-who">recorded by ' + escapeHTML(s.user) + '</div>' +
+            '<div class="w-song-lic">' + escapeHTML(s.license) + ' · <a href="' + escapeHTML(s.obs) + '" target="_blank" rel="noopener">on iNaturalist ↗</a></div>' +
+            '</div>' +
+            '</li>'
+        )
+        .join('');
+    }
+
+    // ----- Songs panel: search, pick, play -----
+    const songSearch = document.getElementById('w-song-search');
+    const songPicks = document.getElementById('w-song-picks');
+    const songList = document.getElementById('w-song-list');
+    const songStatus = document.getElementById('w-song-status');
+    let songSearchTimer = null;
+    let songSearchSeq = 0;
+
+    songSearch.addEventListener('input', () => {
+      clearTimeout(songSearchTimer);
+      const q = songSearch.value.trim();
+      if (q.length < 3) {
+        songPicks.innerHTML = '';
+        return;
+      }
+      songSearchTimer = setTimeout(() => {
+        const seq = ++songSearchSeq;
+        songStatus.textContent = 'searching…';
+        inatTaxaSearch(q, 5)
+          .then((data) => {
+            if (seq !== songSearchSeq) return;
+            const results = ((data && data.results) || []).filter((t) => t.rank === 'species' || t.rank === 'hybrid');
+            if (!results.length) {
+              songPicks.innerHTML = '';
+              songStatus.textContent = 'No birds by that name. Try the common name.';
+              return;
+            }
+            songStatus.textContent = '';
+            songPicks.innerHTML = results
+              .map((t) => {
+                const x = taxonFromResult(t);
+                return (
+                  '<button type="button" class="w-pick" data-pick-taxon="' + x.id + '" data-pick-name="' + escapeHTML(x.common) + '">' +
+                  (x.photo ? '<img src="' + escapeHTML(x.photo) + '" alt="" loading="lazy" />' : '') +
+                  '<span>' + escapeHTML(x.common) + '<span class="sci">' + escapeHTML(x.sci) + '</span></span>' +
+                  '</button>'
+                );
+              })
+              .join('');
+          })
+          .catch(() => {
+            if (seq !== songSearchSeq) return;
+            songStatus.textContent = 'Could not reach iNaturalist (offline?).';
+          });
+      }, 350);
+    });
+
+    function showSongsForTaxon(taxonId, label) {
+      songList.innerHTML = '';
+      songStatus.textContent = 'finding recordings of ' + label + '…';
+      getSongs(taxonId, (songs) => {
+        if (songs === null) {
+          songStatus.textContent = 'Could not reach iNaturalist (offline?).';
+          return;
+        }
+        if (!songs.length) {
+          songStatus.textContent = 'No openly licensed recordings of ' + label + ' yet.';
+          return;
+        }
+        songStatus.textContent = '';
+        songList.innerHTML = songRowsHTML(songs);
+      });
+    }
+
+    songPicks.addEventListener('click', (e) => {
+      const pick = e.target.closest('[data-pick-taxon]');
+      if (!pick) return;
+      for (const p of songPicks.querySelectorAll('.w-pick')) p.classList.remove('is-active');
+      pick.classList.add('is-active');
+      showSongsForTaxon(pick.getAttribute('data-pick-taxon'), pick.getAttribute('data-pick-name'));
+    });
+
+    songList.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-song-url]');
+      if (btn) toggleSong(btn.getAttribute('data-song-url'));
+    });
+
+    renderLog();
+
     function detailsLinks(b) {
       const links = [];
       const aab =
@@ -1170,6 +1571,7 @@
         if (facts && facts.url) {
           links.unshift('<a class="w-chip" href="' + escapeHTML(facts.url) + '" target="_blank" rel="noopener">Wikipedia ↗</a>');
         }
+        links.unshift('<button type="button" class="w-chip" data-entry-song="' + escapeHTML(b.id) + '">▶ Song</button>');
         if (!facts) {
           box2.className = 'w-details is-error';
           box2.innerHTML =
@@ -1222,6 +1624,26 @@
           lightboxImg.src = row.photo;
           lightbox.classList.add('is-on');
         }
+        return;
+      }
+
+      const song = e.target.closest('[data-entry-song]');
+      if (song) {
+        const preset = song.getAttribute('data-song-url');
+        if (preset) return toggleSong(preset);
+        const today = getToday(store);
+        const row = today.birds.find((x) => x.id === song.getAttribute('data-entry-song'));
+        if (!row) return;
+        song.textContent = '…';
+        getTaxon(row, (taxon) => {
+          if (!taxon) { song.textContent = 'no song found'; return; }
+          getSongs(taxon.id, (songs) => {
+            if (!songs || !songs.length) { song.textContent = 'no song found'; return; }
+            song.setAttribute('data-song-url', songs[0].url);
+            song.title = 'Recorded by ' + songs[0].user + ' (' + songs[0].license + ') on iNaturalist';
+            toggleSong(songs[0].url);
+          });
+        });
         return;
       }
 
