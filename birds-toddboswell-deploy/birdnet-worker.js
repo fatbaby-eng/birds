@@ -38,13 +38,30 @@ async function main() {
 
   postMessage({ message: 'loaded' })
 
-  const MIN_AUDIO_CONFIDENCE = 0.1
+  const MIN_AUDIO_CONFIDENCE = 0.06
 
   onmessage = async function ({ data }) {
     try {
       if (data.message === 'predict') {
-        const batches = data.pcmAudio.length / 144000
-        const input = tf.tensor(data.pcmAudio, [batches, 144000])
+        // Boost quiet phone mics: normalize each 3s window before inference.
+        const pcm = data.pcmAudio instanceof Float32Array
+          ? data.pcmAudio
+          : new Float32Array(data.pcmAudio)
+        const batches = pcm.length / 144000
+        const normalized = new Float32Array(pcm.length)
+        for (let batch = 0; batch < batches; batch++) {
+          const start = batch * 144000
+          let peak = 0
+          for (let i = 0; i < 144000; i++) {
+            const a = Math.abs(pcm[start + i])
+            if (a > peak) peak = a
+          }
+          const scale = peak > 1e-5 ? 0.92 / peak : 1
+          for (let i = 0; i < 144000; i++) {
+            normalized[start + i] = pcm[start + i] * scale
+          }
+        }
+        const input = tf.tensor(normalized, [batches, 144000])
         const predictionList = await BirdNetJS.predict(input)
         const prediction = []
         for (let batch = 0; batch < predictionList.length; batch++) {
@@ -60,6 +77,7 @@ async function main() {
             }
           }
         }
+        // Keep UI/worker chatter light on mobile: rank by confidence and cap hits per clip.
         prediction.sort((a, b) => b.confidence - a.confidence)
         const TOP_PER_PREDICT = 32
         const trimmed = prediction.slice(0, TOP_PER_PREDICT)
