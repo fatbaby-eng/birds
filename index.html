@@ -656,6 +656,122 @@
     }
     .w-song-status:empty { display: none; }
 
+    /* ---------- song player bar ---------- */
+    .w-player {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      z-index: 960;
+      width: min(680px, calc(100vw - 24px));
+      background: var(--paper);
+      border: 3px solid var(--ink);
+      border-radius: 18px;
+      box-shadow: var(--shadow-lg);
+      padding: 0.65rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .w-player[hidden] { display: none; }
+    body.w-player-open { padding-bottom: 130px; }
+    .w-player-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.6rem;
+      min-width: 0;
+    }
+    .w-player-title {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+    .w-player-credit {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--grey);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+    .w-player-credit a { color: var(--grey); }
+    .w-player-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: none;
+    }
+    .w-player-count {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--cream);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      padding: 2px 7px;
+    }
+    .w-player-close {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 9px;
+      box-shadow: 2px 2px 0 var(--ink);
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+    .w-player-close:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+    .w-player-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+    .w-player .w-play { width: 40px; height: 40px; font-size: 14px; }
+    .w-step {
+      flex: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--paper);
+      color: var(--ink);
+      border: 2.5px solid var(--ink);
+      box-shadow: 2px 2px 0 var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .w-step:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+    .w-step:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--ink); }
+    .w-seek {
+      flex: 1;
+      min-width: 0;
+      accent-color: var(--hot);
+      height: 22px;
+      cursor: pointer;
+    }
+    .w-player-time {
+      flex: none;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
     /* ---------- photo lightbox ---------- */
     .w-lightbox {
       position: fixed;
@@ -795,6 +911,26 @@
     Field logs, notes, and photos stay here too, until you export them.
     Species portraits and the song player ask iNaturalist, and the field guide asks Wikipedia — only the bird's name is ever sent.
   </p>
+
+  <div class="w-player" id="w-player" hidden role="region" aria-label="Song player">
+    <div class="w-player-top">
+      <div style="min-width:0">
+        <div class="w-player-title" id="w-player-title">—</div>
+        <div class="w-player-credit" id="w-player-credit"></div>
+      </div>
+      <div class="w-player-right">
+        <span class="w-player-count" id="w-player-count">1 / 1</span>
+        <button type="button" class="w-player-close" id="w-player-close" aria-label="Close player">✕</button>
+      </div>
+    </div>
+    <div class="w-player-controls">
+      <button type="button" class="w-step" id="w-player-prev" aria-label="Previous recording">⏮</button>
+      <button type="button" class="w-play" id="w-player-toggle" aria-label="Play or pause">▶</button>
+      <button type="button" class="w-step" id="w-player-next" aria-label="Next recording">⏭</button>
+      <input type="range" class="w-seek" id="w-player-seek" min="0" max="100" step="0.1" value="0" aria-label="Seek" />
+      <span class="w-player-time" id="w-player-time">0:00 / 0:00</span>
+    </div>
+  </div>
 
   <div class="w-lightbox" id="w-lightbox" role="dialog" aria-label="Photo">
     <img id="w-lightbox-img" src="" alt="Field photo" />
@@ -1412,7 +1548,7 @@
       if (songsByTaxon[taxonId]) return cb(songsByTaxon[taxonId]);
       fetch(
         'https://api.inaturalist.org/v1/observations?taxon_id=' + taxonId +
-          '&sounds=true&quality_grade=research&per_page=8&order_by=votes' +
+          '&sounds=true&quality_grade=research&per_page=14&order_by=votes' +
           '&sound_license=cc0,cc-by,cc-by-nc,cc-by-sa,cc-by-nc-sa',
         { headers: { Accept: 'application/json' } }
       )
@@ -1431,7 +1567,7 @@
               license: (s.license_code || 'cc').toUpperCase().replace(/-/g, ' '),
               obs: 'https://www.inaturalist.org/observations/' + o.id,
             });
-            if (songs.length >= 5) break;
+            if (songs.length >= 8) break;
           }
           songsByTaxon[taxonId] = songs;
           cb(songs);
@@ -1439,37 +1575,127 @@
         .catch(() => cb(null));
     }
 
-    // One shared player; clicking the playing button stops it.
+    // One shared player bar: play/pause, seek, and prev/next across a
+    // species' recordings (field recordings vary — let people skip a
+    // noisy take for a cleaner one).
     const player = new Audio();
-    let playingUrl = '';
-    function refreshPlayButtons() {
-      for (const btn of document.querySelectorAll('[data-song-url]')) {
-        const on = playingUrl && btn.getAttribute('data-song-url') === playingUrl;
-        btn.classList.toggle('is-playing', !!on);
-        if (btn.classList.contains('w-chip')) btn.textContent = on ? '◼ Stop' : '▶ Song';
-        else btn.textContent = on ? '◼' : '▶';
-      }
+    const playerBox = document.getElementById('w-player');
+    const playerTitle = document.getElementById('w-player-title');
+    const playerCredit = document.getElementById('w-player-credit');
+    const playerCount = document.getElementById('w-player-count');
+    const playerToggle = document.getElementById('w-player-toggle');
+    const playerPrev = document.getElementById('w-player-prev');
+    const playerNext = document.getElementById('w-player-next');
+    const playerSeek = document.getElementById('w-player-seek');
+    const playerTime = document.getElementById('w-player-time');
+
+    let plSongs = [];
+    let plIndex = -1;
+    let seeking = false;
+
+    function currentUrl() {
+      return plIndex >= 0 && plSongs[plIndex] ? plSongs[plIndex].url : '';
     }
-    function toggleSong(url) {
-      if (playingUrl === url) {
-        player.pause();
-        playingUrl = '';
-      } else {
-        playingUrl = url;
-        player.src = url;
-        player.play().catch(() => { playingUrl = ''; refreshPlayButtons(); });
+
+    function fmtTime(s) {
+      if (!isFinite(s) || s < 0) return '0:00';
+      s = Math.round(s);
+      return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    function refreshPlayButtons() {
+      const activeUrl = !player.paused && !player.ended ? currentUrl() : '';
+      for (const btn of document.querySelectorAll('[data-song-url]')) {
+        const on = activeUrl && btn.getAttribute('data-song-url') === activeUrl;
+        btn.classList.toggle('is-playing', !!on);
+        if (!btn.classList.contains('w-chip')) btn.textContent = on ? '◼' : '▶';
       }
+      playerToggle.textContent = !player.paused && !player.ended ? '❚❚' : '▶';
+      playerToggle.classList.toggle('is-playing', !player.paused && !player.ended);
+    }
+
+    function updatePlayerMeta(label) {
+      if (label) playerTitle.textContent = label;
+      const s = plSongs[plIndex];
+      if (s) {
+        playerCredit.innerHTML =
+          'rec. by ' + escapeHTML(s.user) + ' · ' + escapeHTML(s.license) +
+          ' · <a href="' + escapeHTML(s.obs) + '" target="_blank" rel="noopener">iNaturalist ↗</a>';
+      }
+      playerCount.textContent = (plIndex + 1) + ' / ' + plSongs.length;
+      playerPrev.disabled = plIndex <= 0;
+      playerNext.disabled = plIndex >= plSongs.length - 1;
+    }
+
+    function playIndex(i, label) {
+      if (i < 0 || i >= plSongs.length) return;
+      plIndex = i;
+      playerSeek.value = 0;
+      playerTime.textContent = '0:00 / 0:00';
+      player.src = plSongs[i].url;
+      player.play().catch(() => refreshPlayButtons());
+      updatePlayerMeta(label);
       refreshPlayButtons();
     }
-    player.addEventListener('ended', () => { playingUrl = ''; refreshPlayButtons(); });
-    player.addEventListener('error', () => { playingUrl = ''; refreshPlayButtons(); });
+
+    function openPlayer(songs, index, label) {
+      plSongs = songs || [];
+      if (!plSongs.length) return;
+      playerBox.hidden = false;
+      document.body.classList.add('w-player-open');
+      playIndex(index || 0, label);
+    }
+
+    function closePlayer() {
+      player.pause();
+      player.removeAttribute('src');
+      plSongs = [];
+      plIndex = -1;
+      playerBox.hidden = true;
+      document.body.classList.remove('w-player-open');
+      refreshPlayButtons();
+    }
+
+    playerToggle.addEventListener('click', () => {
+      if (!currentUrl()) return;
+      if (player.paused || player.ended) player.play().catch(() => {});
+      else player.pause();
+    });
+    playerPrev.addEventListener('click', () => playIndex(plIndex - 1));
+    playerNext.addEventListener('click', () => playIndex(plIndex + 1));
+    document.getElementById('w-player-close').addEventListener('click', closePlayer);
+
+    playerSeek.addEventListener('input', () => {
+      seeking = true;
+      if (isFinite(player.duration)) {
+        player.currentTime = (playerSeek.value / 100) * player.duration;
+      }
+    });
+    playerSeek.addEventListener('change', () => { seeking = false; });
+
+    player.addEventListener('timeupdate', () => {
+      if (!seeking && isFinite(player.duration) && player.duration > 0) {
+        playerSeek.value = (player.currentTime / player.duration) * 100;
+      }
+      playerTime.textContent = fmtTime(player.currentTime) + ' / ' + fmtTime(player.duration);
+    });
+    player.addEventListener('loadedmetadata', () => {
+      playerTime.textContent = '0:00 / ' + fmtTime(player.duration);
+    });
+    player.addEventListener('play', refreshPlayButtons);
+    player.addEventListener('pause', refreshPlayButtons);
+    player.addEventListener('ended', refreshPlayButtons);
+    player.addEventListener('error', () => {
+      playerCredit.textContent = 'could not load that recording — try the next one';
+      refreshPlayButtons();
+    });
 
     function songRowsHTML(songs) {
       return songs
         .map(
-          (s) =>
+          (s, i) =>
             '<li class="w-song-row">' +
-            '<button type="button" class="w-play" data-song-url="' + escapeHTML(s.url) + '" aria-label="Play recording">▶</button>' +
+            '<button type="button" class="w-play" data-song-index="' + i + '" data-song-url="' + escapeHTML(s.url) + '" aria-label="Play recording">▶</button>' +
             '<div class="w-song-meta">' +
             '<div class="w-song-who">recorded by ' + escapeHTML(s.user) + '</div>' +
             '<div class="w-song-lic">' + escapeHTML(s.license) + ' · <a href="' + escapeHTML(s.obs) + '" target="_blank" rel="noopener">on iNaturalist ↗</a></div>' +
@@ -1528,6 +1754,8 @@
       }, 350);
     });
 
+    let panelSongs = [];
+    let panelLabel = '';
     function showSongsForTaxon(taxonId, label) {
       songList.innerHTML = '';
       songStatus.textContent = 'finding recordings of ' + label + '…';
@@ -1540,8 +1768,11 @@
           songStatus.textContent = 'No openly licensed recordings of ' + label + ' yet.';
           return;
         }
+        panelSongs = songs;
+        panelLabel = label;
         songStatus.textContent = '';
         songList.innerHTML = songRowsHTML(songs);
+        refreshPlayButtons();
       });
     }
 
@@ -1554,8 +1785,14 @@
     });
 
     songList.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-song-url]');
-      if (btn) toggleSong(btn.getAttribute('data-song-url'));
+      const btn = e.target.closest('[data-song-index]');
+      if (!btn) return;
+      const i = parseInt(btn.getAttribute('data-song-index'), 10);
+      if (panelSongs[i] && panelSongs[i].url === currentUrl() && !player.paused) {
+        player.pause();
+      } else {
+        openPlayer(panelSongs, i, panelLabel);
+      }
     });
 
     renderLog();
@@ -1644,8 +1881,6 @@
 
       const song = e.target.closest('[data-entry-song]');
       if (song) {
-        const preset = song.getAttribute('data-song-url');
-        if (preset) return toggleSong(preset);
         const today = getToday(store);
         const row = today.birds.find((x) => x.id === song.getAttribute('data-entry-song'));
         if (!row) return;
@@ -1654,9 +1889,8 @@
           if (!taxon) { song.textContent = 'no song found'; return; }
           getSongs(taxon.id, (songs) => {
             if (!songs || !songs.length) { song.textContent = 'no song found'; return; }
-            song.setAttribute('data-song-url', songs[0].url);
-            song.title = 'Recorded by ' + songs[0].user + ' (' + songs[0].license + ') on iNaturalist';
-            toggleSong(songs[0].url);
+            song.textContent = '▶ Song';
+            openPlayer(songs, 0, row.name);
           });
         });
         return;
