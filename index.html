@@ -1296,7 +1296,7 @@
     }
 
     // ----- iNaturalist: species portraits + songs -----
-    const TAXA_CACHE_KEY = 'birdid.taxa.v1';
+    const TAXA_CACHE_KEY = 'birdid.taxa.v2'; // v1 could hold genus-level hits
 
     function loadTaxaCache() {
       try {
@@ -1355,9 +1355,17 @@
           try { w(taxon); } catch (e) {}
         }
       };
-      inatTaxaSearch(b.sci || b.name, 1)
+      inatTaxaSearch(b.sci || b.name, 5)
         .then((data) => {
-          const t = data && data.results && data.results[0];
+          // iNat can rank the genus above the species for a binomial
+          // query — prefer an exact scientific-name match, then any
+          // species-rank result, before falling back to the top hit.
+          const results = (data && data.results) || [];
+          const want = (b.sci || '').trim().toLowerCase();
+          const t =
+            (want && results.find((x) => (x.name || '').toLowerCase() === want)) ||
+            results.find((x) => x.rank === 'species') ||
+            results[0];
           if (!t) return settle(null);
           const taxon = taxonFromResult(t);
           taxaCache[key] = taxon;
