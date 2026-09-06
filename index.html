@@ -70,12 +70,19 @@
       -webkit-tap-highlight-color: transparent;
     }
     #root { display: block; font-family: var(--display); }
+    /* Header bird mark: just the bird, no box around it. */
+    #root .w-app-logo {
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      border-radius: 0 !important;
+    }
     #root .w-app-logo img {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: block;
-      padding: 2px;
+      padding: 0;
     }
 
     /* Chunk up the React app's hairline borders so its panels read
@@ -957,7 +964,9 @@
     const STORAGE_LEGACY = 'birdid.v1';
     const WIKI_CACHE_KEY = 'birdid.wiki.v1';
     const LISTEN_GAP_MS = 45000;
-    const SCAN_CAP = 52;
+    // React can mount the whole results card as one added node; a low cap
+    // ran out before reaching the prediction rows and dropped captures.
+    const SCAN_CAP = 600;
     const PHOTO_MAX_EDGE = 720;
     const PHOTO_TARGET_CHARS = 260000; // ~190KB of image as base64
 
@@ -967,6 +976,31 @@
     function genId() {
       if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
       return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+    }
+
+    // Repair entries saved while the old parser glued the sci name and
+    // "N MATCHES · T+…" chatter onto the species name.
+    function scrubEntryName(b) {
+      if (!b || typeof b.name !== 'string') return;
+      let n = b.name;
+      if (b.sci) {
+        const i = n.indexOf(b.sci);
+        if (i > 0) n = n.slice(0, i);
+      }
+      n = n
+        .replace(/\d+\s*MATCH(?:ES)?[^]*$/i, '')
+        .replace(/T\+[\d:.][^]*$/, '')
+        .replace(/[—·–-]\s*$/, '')
+        .trim();
+      if (!b.sci) {
+        // "Eastern Screech-OwlMegascops asio" — split the glued binomial.
+        const gm = n.match(/([a-z)])((?:[A-Z][a-z]+) [a-z][a-z -]+)$/);
+        if (gm) {
+          b.sci = gm[2].trim();
+          n = n.slice(0, n.length - gm[2].length).trim();
+        }
+      }
+      if (n) b.name = n;
     }
 
     function normalizeStore(parsed) {
@@ -980,6 +1014,7 @@
           if (typeof b.note !== 'string') b.note = '';
           if (typeof b.listenGen !== 'number') b.listenGen = 0;
           if (typeof b.photo !== 'string' || b.photo.indexOf('data:image/') !== 0) b.photo = '';
+          scrubEntryName(b);
         }
       }
       return { version: 2, sessions };
@@ -1063,27 +1098,68 @@
 
     const parsedHosts = new WeakSet();
 
+    // Confidence badge: the smallest element whose whole text is "NN%".
+    function findLeafConfidence(el) {
+      for (const n of el.querySelectorAll('*')) {
+        if (n.children.length) continue;
+        const m = (n.textContent || '').trim().match(/^(\d{1,3})\s*%$/);
+        if (m) {
+          const v = parseInt(m[1], 10);
+          if (v >= 0 && v <= 100) return v;
+        }
+      }
+      const m = (el.textContent || '').trim().match(/^(\d{1,3})\s*%$/);
+      if (m) {
+        const v = parseInt(m[1], 10);
+        if (v >= 0 && v <= 100) return v;
+      }
+      return null;
+    }
+
     function parsePredictionRow(el) {
       if (!(el instanceof Element)) return null;
       const text = el.textContent || '';
+      if (text.indexOf('%') === -1 || text.length > 260) return null;
+
+      // The app's result row marks its parts: name span has .font-display,
+      // the scientific name is a span with an `italic` CLASS (not <i>/<em>),
+      // and the confidence lives in its own leaf element. Never trust the
+      // row's glued textContent — "T+00:04" + "20%" reads as "0420%".
+      const nameEl = el.querySelector('.font-display');
+      const sciEl = el.querySelector('.italic, i, em');
+      if (nameEl) {
+        const name = (nameEl.textContent || '').trim();
+        const leafConf = findLeafConfidence(el);
+        if (!name || leafConf === null) return null;
+        return {
+          name,
+          sci: sciEl ? (sciEl.textContent || '').trim() : '',
+          confidence: leafConf,
+        };
+      }
+
+      // Fallback for markup without those classes.
       const percentMatch = text.match(/(\d{1,3})\s*%/);
       if (!percentMatch) return null;
-      if (text.length > 260) return null;
       const confidence = parseInt(percentMatch[1], 10);
       if (!(confidence >= 0 && confidence <= 100)) return null;
       let beforePct = text.slice(0, percentMatch.index).trim();
-      beforePct = beforePct.replace(/[—·–-]\s*$/, '').trim();
-      if (!beforePct) return null;
+      beforePct = beforePct
+        .replace(/\d+\s*MATCH(?:ES)?\s*·?\s*T\+[\d:.]*\s*·?\s*$/i, '')
+        .replace(/[—·–-]\s*$/, '')
+        .trim();
+      if (!beforePct || beforePct.length > 60) return null;
+      if (/^(best|avg\.?|match(?:es)?|standby|analyzing|confidence|signal|ready)$/i.test(beforePct)) return null;
       let name = beforePct;
       let sci = '';
-      const italics = el.querySelectorAll('i, em');
-      if (italics.length) {
-        const sciText = italics[0].textContent.trim();
+      if (sciEl) {
+        const sciText = (sciEl.textContent || '').trim();
         if (sciText && beforePct.endsWith(sciText)) {
           name = beforePct.slice(0, -sciText.length).trim();
           sci = sciText;
         }
       }
+      if (!name) return null;
       return { name, sci, confidence };
     }
 
@@ -1133,7 +1209,9 @@
 
     function tryIngestPredictionElement(el) {
       if (!(el instanceof Element)) return false;
-      if (parsedHosts.has(el)) return false;
+      // Already-ingested rows return true so the scanner does not descend
+      // into them and re-parse their pieces (the "BEST 20%" badge).
+      if (parsedHosts.has(el)) return true;
       // Session-log history (incl. runs rehydrated from a past visit)
       // lives in an <aside>; only live results in <main> are new birds.
       if (el.closest && el.closest('aside')) return false;
@@ -1181,7 +1259,10 @@
       if (!root || rootObserver) return;
       rootObserver = new MutationObserver((mutations) => {
         pendingMutations.push.apply(pendingMutations, mutations);
-        if (!moRaf) moRaf = requestAnimationFrame(flushPredictionMutations);
+        // setTimeout, not requestAnimationFrame: rAF never fires while the
+        // tab is hidden, so results that landed with the screen off or the
+        // app backgrounded were never captured into the log.
+        if (!moRaf) moRaf = setTimeout(flushPredictionMutations, 60);
       });
       rootObserver.observe(root, { childList: true, subtree: true });
     }
@@ -1827,7 +1908,7 @@
         if (!facts) {
           box2.className = 'w-details is-error';
           box2.innerHTML =
-            'No luck reaching the field guide (offline?). Try these instead: <span class="w-details-links">' +
+            'The field guide came up empty for this one. Try these instead: <span class="w-details-links">' +
             links.join(' ') +
             '</span>';
           return;
