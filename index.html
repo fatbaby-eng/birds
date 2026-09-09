@@ -1321,17 +1321,24 @@
         return;
       }
       const speciesCounts = new Map();
+      let otherCallers = 0;
+      let birdIds = 0;
       for (const b of birds) {
+        if (isNonBird(b)) { otherCallers++; continue; }
+        birdIds++;
         const k = speciesKey(b.name, b.sci);
         speciesCounts.set(k, (speciesCounts.get(k) || 0) + 1);
       }
       const speciesTotal = speciesCounts.size;
       logMeta.textContent =
-        birds.length +
-        (birds.length === 1 ? ' ID' : ' IDs') +
+        birdIds +
+        (birdIds === 1 ? ' ID' : ' IDs') +
         ' · ' +
         speciesTotal +
-        (speciesTotal === 1 ? ' species' : ' species');
+        ' species' +
+        (otherCallers
+          ? ' · ' + otherCallers + (otherCallers === 1 ? ' other caller' : ' other callers')
+          : '');
 
       const html = ['<ul class="w-log-list">'];
       const sorted = [...birds].sort((a, b) => b.ts - a.ts);
@@ -1561,6 +1568,13 @@
     }
     const taxaCache = loadTaxaCache();
     const taxaInFlight = new Map(); // key -> [callbacks waiting]
+
+    // A logged entry whose iNat lookup found no bird by that name (frogs,
+    // toads, …). They stay in the log, tagged — but never count as birds.
+    function isNonBird(b) {
+      const t = taxaCache[speciesKey(b.name, b.sci)];
+      return !!(t && t.miss && b.sci);
+    }
 
     function inatTaxaSearch(q, perPage) {
       // The taxa endpoint ignores iconic_taxa, so over-fetch and keep
@@ -2129,21 +2143,26 @@
         md += '## ' + d + '\n\n';
         if (birds.length) {
           const speciesMap = new Map();
+          let others = 0;
           for (const b of birds) {
+            if (isNonBird(b)) { others++; continue; }
             const key = b.name + (b.sci ? '|' + b.sci : '');
             speciesMap.set(key, (speciesMap.get(key) || 0) + 1);
           }
           md +=
             '**Summary:** ' +
-            birds.length +
-            ' identification(s), ' +
+            (birds.length - others) +
+            ' bird identification(s), ' +
             speciesMap.size +
-            ' species\n\n';
+            ' species' +
+            (others ? ', ' + others + ' other caller(s)' : '') +
+            '\n\n';
           const sorted = [...birds].sort((a, b) => a.ts - b.ts);
           for (const b of sorted) {
             md += '- **' + b.time + '** — ' + b.name;
             if (b.sci) md += ' _' + b.sci + '_';
             md += ' · ' + b.confidence + '%';
+            if (isNonBird(b)) md += ' · not a bird';
             if (b.photo) md += ' · 📷';
             if (b.note && b.note.trim()) md += '\n  - Note: ' + b.note.replace(/\n/g, '\n    ');
             md += '\n';
@@ -2249,9 +2268,12 @@
       const birds = session.birds || [];
       const notes = session.notes || '';
 
-      // Group identifications by species — count occurrences
+      // Group bird identifications by species; other callers (frogs,
+      // toads) appear in the timeline but never in the bird counts.
+      const realBirds = birds.filter((b) => !isNonBird(b));
+      const otherCount = birds.length - realBirds.length;
       const speciesMap = new Map();
-      for (const b of birds) {
+      for (const b of realBirds) {
         const key = b.name + (b.sci ? '|' + b.sci : '');
         if (!speciesMap.has(key)) {
           speciesMap.set(key, { name: b.name, sci: b.sci, count: 0, bestConf: 0, firstHeard: b.time });
@@ -2275,7 +2297,7 @@
       const timelineRows = [...birds].sort((a, b) => a.ts - b.ts).map(b => `
         <tr>
           <td class="num">${escapeHTML(b.time)}</td>
-          <td>${escapeHTML(b.name)}${b.sci ? ` <em>(${escapeHTML(b.sci)})</em>` : ''}${
+          <td>${escapeHTML(b.name)}${b.sci ? ` <em>(${escapeHTML(b.sci)})</em>` : ''}${isNonBird(b) ? ' <em>· not a bird</em>' : ''}${
             b.photo && b.photo.indexOf('data:image/') === 0
               ? `<br><img class="snap" src="${escapeHTML(b.photo)}" alt="Photo of ${escapeHTML(b.name)}">`
               : ''
@@ -2497,12 +2519,12 @@
     </header>
 
     <h1>${escapeHTML(dateStr)}</h1>
-    <div class="subtitle">${birds.length} identifications · ${speciesList.length} species</div>
+    <div class="subtitle">${realBirds.length} bird identification${realBirds.length === 1 ? '' : 's'} · ${speciesList.length} species${otherCount ? ` · ${otherCount} other caller${otherCount === 1 ? '' : 's'}` : ''}</div>
 
     <div class="summary-stats">
-      <div class="stat"><div class="stat-value">${birds.length}</div><div class="stat-label">Total Calls</div></div>
+      <div class="stat"><div class="stat-value">${realBirds.length}</div><div class="stat-label">Bird Calls</div></div>
       <div class="stat"><div class="stat-value">${speciesList.length}</div><div class="stat-label">Species</div></div>
-      <div class="stat"><div class="stat-value">${birds.length ? Math.round(birds.reduce((a, b) => a + b.confidence, 0) / birds.length) : 0}%</div><div class="stat-label">Avg. Confidence</div></div>
+      <div class="stat"><div class="stat-value">${realBirds.length ? Math.round(realBirds.reduce((a, b) => a + b.confidence, 0) / realBirds.length) : 0}%</div><div class="stat-label">Avg. Confidence</div></div>
     </div>
 
     ${speciesList.length ? `
