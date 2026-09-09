@@ -343,6 +343,17 @@
     }
     .w-log-conf.is-solid { background: var(--mint); }
     .w-log-conf.is-maybe { background: var(--cream); }
+    .w-notbird {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--grey);
+      border: 2px dashed var(--grey);
+      border-radius: 8px;
+      padding: 3px 7px;
+      white-space: nowrap;
+    }
     .w-log-actions {
       display: flex;
       align-items: center;
@@ -978,6 +989,17 @@
       return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
     }
 
+    // BirdNET also emits noise classes (their "sci name" repeats the label,
+    // e.g. Engine / Engine). Those are useful in the app's results but do
+    // not belong in a bird log.
+    const NOISE_CLASSES = /^(engine|siren|dog|gun|gunshot|fireworks|power tools|environmental|noise|human(?: vocal| non-vocal| whistle| speech)?)$/i;
+    function isNoiseClass(p) {
+      const n = (p.name || '').trim();
+      if (!n) return false;
+      if (NOISE_CLASSES.test(n)) return true;
+      return !!(p.sci && p.sci.trim().toLowerCase() === n.toLowerCase());
+    }
+
     // Repair entries saved while the old parser glued the sci name and
     // "N MATCHES · T+…" chatter onto the species name.
     function scrubEntryName(b) {
@@ -1009,6 +1031,7 @@
       for (const day of Object.keys(sessions)) {
         const sess = sessions[day];
         if (!sess || !Array.isArray(sess.birds)) continue;
+        sess.birds = sess.birds.filter((b) => !isNoiseClass(b));
         for (const b of sess.birds) {
           if (!b.id) b.id = genId();
           if (typeof b.note !== 'string') b.note = '';
@@ -1218,6 +1241,7 @@
       const parsed = parsePredictionRow(el);
       if (!parsed) return false;
       parsedHosts.add(el);
+      if (isNoiseClass(parsed)) return true; // seen, but engines aren't birds
       ingestPrediction(parsed);
       injectRowPortrait(el, parsed);
       return true;
@@ -1335,6 +1359,9 @@
           '<span class="w-log-conf' + confClass(b.confidence) + '">',
           String(b.confidence),
           '%</span>',
+          taxon && taxon.miss && b.sci
+            ? '<span class="w-notbird" title="No bird goes by this name — the model also hears frogs, toads, and other callers.">not a bird?</span>'
+            : '',
           '</div>',
           '<div class="w-log-actions">',
           hasPhoto
@@ -1564,7 +1591,8 @@
     // Look up (and remember) the iNat taxon for a logged bird.
     function getTaxon(b, cb) {
       const key = speciesKey(b.name, b.sci);
-      if (taxaCache[key]) return cb(taxaCache[key]);
+      const cached = taxaCache[key];
+      if (cached) return cb(cached.miss ? null : cached);
       if (taxaInFlight.has(key)) {
         taxaInFlight.get(key).push(cb);
         return;
@@ -1588,7 +1616,12 @@
             (want && results.find((x) => (x.name || '').toLowerCase() === want)) ||
             results.find((x) => x.rank === 'species') ||
             results[0];
-          if (!t) return settle(null);
+          if (!t) {
+            // Remember the miss: no bird by this name (frogs, toads, …).
+            taxaCache[key] = { at: Date.now(), miss: true };
+            saveTaxaCache(taxaCache);
+            return settle(null);
+          }
           const taxon = taxonFromResult(t);
           taxaCache[key] = taxon;
           saveTaxaCache(taxaCache);
@@ -1602,8 +1635,9 @@
     function queuePortrait(b) {
       const key = speciesKey(b.name, b.sci);
       if (taxaCache[key]) return;
-      getTaxon(b, (taxon) => {
-        if (!taxon || !taxon.photo) return;
+      getTaxon(b, () => {
+        // Repaint on any resolution — a portrait to show, or a miss that
+        // earns the entry its "not a bird?" chip.
         clearTimeout(portraitRepaint);
         portraitRepaint = setTimeout(renderLog, 150);
       });
